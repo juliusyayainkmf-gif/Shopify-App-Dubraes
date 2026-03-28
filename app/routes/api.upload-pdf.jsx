@@ -1,4 +1,22 @@
 import { v2 as cloudinary } from "cloudinary";
+import streamifier from "streamifier";
+
+const uploadFromBuffer = (buffer, configId) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        resource_type: "raw",
+        public_id: `configs/${configId}`,
+      },
+      (error, result) => {
+        if (result) resolve(result);
+        else reject(error);
+      }
+    );
+
+    streamifier.createReadStream(buffer).pipe(stream);
+  });
+};
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -42,15 +60,8 @@ export const action = async ({ request }) => {
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    const base64 = buffer.toString("base64");
 
-    const result = await cloudinary.uploader.upload(
-      `data:application/pdf;base64,${base64}`,
-      {
-        resource_type: "raw",
-        public_id: `configs/${configId}`,
-      },
-    );
+    const result = await uploadFromBuffer(buffer, configId);
 
     return new Response(JSON.stringify({ url: result.secure_url }), {
       headers: {
