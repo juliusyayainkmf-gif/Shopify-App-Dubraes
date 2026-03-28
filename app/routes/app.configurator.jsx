@@ -1,140 +1,17 @@
 import { authenticate } from "../shopify.server";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLoaderData, useFetcher } from "react-router";
+import { getConfiguratorData } from "../services/metaobjects.server";
+import {
+  createMetaobject,
+  deleteMetaobject,
+} from "../services/metaobjects.actions.server";
 
 export const loader = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
 
-  const response = await admin.graphql(`
-  {
-    models: metaobjects(type: "configurator_model", first: 50) {
-      edges {
-        node {
-          id
-          fields {
-            key
-            value
-          }
-        }
-      }
-    }
-
-    colors: metaobjects(type: "configurator_color", first: 50) {
-      edges {
-        node {
-          id
-          fields {
-            key
-            value
-          }
-        }
-      }
-    }
-
-    logos: metaobjects(type: "configurator_logo", first: 50) {
-      edges {
-        node {
-          id
-          fields {
-            key
-            value
-                          reference {
-                ... on Model3d {
-                    filename
-                    sources {
-                    url
-                    format
-                    }
-                }
-                }
-          }
-        }
-      }
-    }
-
-    fonts: metaobjects(type: "configurator_font", first: 50) {
-      edges {
-        node {
-          id
-          fields {
-            key
-            value
-                        reference {
-              ... on GenericFile {
-                url
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  `);
-
-  const json = await response.json();
-
-  const parseFields = (node) => {
-    const data = {};
-
-    node.fields.forEach((f) => {
-      if (f.reference?.sources) {
-        data[f.key] = {
-          name: f.reference.filename,
-          url: f.reference.sources[0].url,
-        };
-      } else {
-        data[f.key] = f.value;
-      }
-    });
-
-    return {
-      id: node.id,
-      ...data,
-    };
-  };
-
-  return {
-    models: json.data.models.edges.map((e) => parseFields(e.node)),
-    colors: json.data.colors.edges.map((e) => parseFields(e.node)),
-    logos: json.data.logos.edges.map((e) => parseFields(e.node)),
-    fonts: json.data.fonts.edges.map((e) => parseFields(e.node)),
-  };
+  return await getConfiguratorData(admin);
 };
-
-async function publishMetaobject(admin, id) {
-  const mutation = `
-    mutation UpdateMetaobject($id: ID!) {
-      metaobjectUpdate(
-        id: $id
-        metaobject: {
-          capabilities: {
-            publishable: {
-              status: ACTIVE
-            }
-          }
-        }
-      ) {
-        metaobject {
-          id
-        }
-        userErrors {
-          field
-          message
-        }
-      }
-    }
-  `;
-
-  const res = await admin.graphql(mutation, {
-    variables: { id },
-  });
-
-  const json = await res.json();
-
-  if (json.data.metaobjectUpdate.userErrors.length > 0) {
-    console.log("Publish Errors:", json.data.metaobjectUpdate.userErrors);
-  }
-}
 
 export const action = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
@@ -142,191 +19,72 @@ export const action = async ({ request }) => {
 
   const actionType = formData.get("action");
 
+  // -------- CREATE --------
   if (actionType === "addModel") {
-    const name = formData.get("name");
-    const modelLink = formData.get("model_link");
-
-    const mutation = `
-    mutation CreateModel($metaobject: MetaobjectCreateInput!) {
-      metaobjectCreate(metaobject: $metaobject) {
-        metaobject {
-          id
-        }
-        userErrors {
-          field
-          message
-        }
-      }
-    }
-  `;
-
-    const response = await admin.graphql(mutation, {
-      variables: {
-        metaobject: {
-          type: "configurator_model",
-          fields: [
-            { key: "name", value: name },
-            { key: "model_link", value: modelLink },
-          ],
-        },
-      },
-    });
-
-    const json = await response.json();
-
-    const errors = json.data.metaobjectCreate.userErrors;
-    if (errors.length > 0) {
-      console.log("Shopify Errors:", errors);
-      return null;
-    }
-
-    const id = json.data.metaobjectCreate.metaobject.id;
-    await publishMetaobject(admin, id);
-  }
-
-  if (actionType === "deleteModel") {
-    const id = formData.get("id");
-
-    const mutation = `
-      mutation DeleteModel($id: ID!) {
-        metaobjectDelete(id: $id) {
-          deletedId
-          userErrors {
-            field
-            message
-          }
-        }
-      }
-    `;
-
-    await admin.graphql(mutation, {
-      variables: { id },
+    return createMetaobject(admin, {
+      type: "configurator_model",
+      fields: [
+        { key: "name", value: formData.get("name") },
+        { key: "model_link", value: formData.get("model_link") },
+      ],
+      successMessage: "Model added successfully",
     });
   }
 
   if (actionType === "addColor") {
-    const name = formData.get("name");
-    const hex = formData.get("hex");
-
-    const mutation = `
-      mutation CreateColor($metaobject: MetaobjectCreateInput!) {
-        metaobjectCreate(metaobject: $metaobject) {
-          metaobject {
-            id
-          }
-          userErrors {
-            field
-            message
-          }
-        }
-      }
-    `;
-
-    const response = await admin.graphql(mutation, {
-      variables: {
-        metaobject: {
-          type: "configurator_color",
-          fields: [
-            { key: "name", value: name },
-            { key: "hex", value: hex },
-          ],
-        },
-      },
-    });
-
-    const json = await response.json();
-
-    const errors = json.data.metaobjectCreate.userErrors;
-    if (errors.length > 0) {
-      console.log("Shopify Errors:", errors);
-      return null;
-    }
-
-    const id = json.data.metaobjectCreate.metaobject.id;
-    await publishMetaobject(admin, id);
-  }
-
-  if (actionType === "deleteColor") {
-    const id = formData.get("id");
-
-    const mutation = `
-      mutation DeleteColor($id: ID!) {
-        metaobjectDelete(id: $id) {
-          deletedId
-          userErrors {
-            field
-            message
-          }
-        }
-      }
-    `;
-
-    await admin.graphql(mutation, {
-      variables: { id },
+    return createMetaobject(admin, {
+      type: "configurator_color",
+      fields: [
+        { key: "name", value: formData.get("name") },
+        { key: "hex", value: formData.get("hex") },
+      ],
+      successMessage: "Color added successfully",
     });
   }
 
   if (actionType === "addLogo") {
-    const name = formData.get("name");
-    const logo = formData.get("logo_link");
-
-    await admin.graphql(
-      `
-    mutation CreateLogo($metaobject: MetaobjectCreateInput!) {
-      metaobjectCreate(metaobject: $metaobject) {
-        metaobject { id }
-        userErrors { field message }
-      }
-    }
-  `,
-      {
-        variables: {
-          metaobject: {
-            type: "configurator_logo",
-            fields: [
-              { key: "name", value: name },
-              { key: "logo_link", value: logo },
-            ],
-          },
-        },
-      },
-    );
+    return createMetaobject(admin, {
+      type: "configurator_logo",
+      fields: [
+        { key: "name", value: formData.get("name") },
+        { key: "logo_file", value: formData.get("logo_link") },
+      ],
+      successMessage: "Logo added successfully",
+    });
   }
 
   if (actionType === "addFont") {
-    const name = formData.get("name");
-    const font = formData.get("font_link");
-
-    await admin.graphql(
-      `
-    mutation CreateFont($metaobject: MetaobjectCreateInput!) {
-      metaobjectCreate(metaobject: $metaobject) {
-        metaobject { id }
-        userErrors { field message }
-      }
-    }
-  `,
-      {
-        variables: {
-          metaobject: {
-            type: "configurator_font",
-            fields: [
-              { key: "name", value: name },
-              { key: "font_link", value: font },
-            ],
-          },
-        },
-      },
-    );
+    return createMetaobject(admin, {
+      type: "configurator_font",
+      fields: [
+        { key: "name", value: formData.get("name") },
+        { key: "font_file", value: formData.get("font_link") },
+      ],
+      successMessage: "Font added successfully",
+    });
   }
 
-  return null;
+  // -------- DELETE --------
+  if (
+    actionType === "deleteModel" ||
+    actionType === "deleteColor" ||
+    actionType === "deleteLogo" ||
+    actionType === "deleteFont"
+  ) {
+    return deleteMetaobject(admin, formData.get("id"));
+  }
+
+  return {
+    success: false,
+    message: "Invalid action",
+  };
 };
 
 export default function ConfiguratorAdmin() {
   const { models, colors, logos, fonts } = useLoaderData();
   const fetcher = useFetcher();
 
+  // ---------------- STATE ----------------
   const [modelName, setModelName] = useState("");
   const [modelLink, setModelLink] = useState("");
 
@@ -338,6 +96,9 @@ export default function ConfiguratorAdmin() {
 
   const [fontName, setFontName] = useState("");
   const [fontLink, setFontLink] = useState("");
+
+  const [banner, setBanner] = useState(null);
+  const isLoading = fetcher.state !== "idle";
 
   const addModel = () => {
     fetcher.submit(
@@ -392,6 +153,16 @@ export default function ConfiguratorAdmin() {
     );
   };
 
+  const deleteLogo = (id) => {
+    fetcher.submit(
+      {
+        action: "deleteLogo",
+        id,
+      },
+      { method: "post" },
+    );
+  };
+
   const addFont = () => {
     fetcher.submit(
       {
@@ -403,173 +174,348 @@ export default function ConfiguratorAdmin() {
     );
   };
 
+  const deleteFont = (id) => {
+    fetcher.submit(
+      {
+        action: "deleteFont",
+        id,
+      },
+      { method: "post" },
+    );
+  };
+
+  // ---------------- RESPONSE HANDLER ----------------
+  useEffect(() => {
+    if (fetcher.data) {
+      setBanner({
+        type: fetcher.data.success ? "success" : "error",
+        message: fetcher.data.message,
+      });
+    }
+  }, [fetcher.data]);
+
+  // auto hide banner
+  useEffect(() => {
+    if (banner) {
+      const t = setTimeout(() => setBanner(null), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [banner]);
+
   return (
-    <s-page heading="Dubrae Configurator Data">
-      <s-section heading="Models">
-        <s-stack direction="block" gap="base">
-          {models.map((item) => (
-            <s-box
-              key={item.id}
-              padding="base"
-              borderWidth="base"
-              borderRadius="base"
-            >
-              <s-stack direction="inline" gap="base" align="center">
-                <strong>{item.name}</strong>
+    <>
+      {/* ---------------- SPINNER ---------------- */}
+      {isLoading && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            background: "rgba(255,255,255,0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+          }}
+        >
+          <s-stack alignItems="center" gap="base" padding="large">
+            <s-spinner
+              accessibilityLabel="Loading products"
+              size="large"
+            ></s-spinner>
+            <s-text>Loading...</s-text>
+          </s-stack>
+        </div>
+      )}
 
-                <a href={item.model_link} target="_blank">
-                  {item.model_link}
-                </a>
+      {/* ---------------- BANNER ---------------- */}
+      {banner && (
+        <s-banner
+          heading="Update was Successfully"
+          tone="success"
+          dismissible="true"
+        >
+          {banner.message}
+        </s-banner>
+      )}
 
-                <s-button tone="critical" onClick={() => deleteModel(item.id)}>
-                  Delete
-                </s-button>
-              </s-stack>
-            </s-box>
-          ))}
+      {/* ---------------- UI ---------------- */}
+      <s-page heading="Dubraes Configurator Settings">
+        <s-section>
+          <s-stack
+            direction="inline"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <h2>Models</h2>
 
-          <s-box padding="base" borderWidth="base" borderRadius="base">
-            <s-stack direction="inline" gap="base">
-              <input
-                placeholder="Model name"
-                value={modelName}
-                onChange={(e) => setModelName(e.target.value)}
-              />
+            <s-button variant="primary" commandFor="modelModal">
+              Add Model
+            </s-button>
 
-              <input
-                placeholder="Model URL (.glb)"
-                value={modelLink}
-                onChange={(e) => setModelLink(e.target.value)}
-              />
+            <s-modal id="modelModal" heading="Add Model">
+              <s-box padding="base" borderWidth="base" borderRadius="base">
+                <s-stack direction="inline" gap="base">
+                  <s-text-field
+                    label="Model Name"
+                    value={modelName}
+                    placeholder="Small"
+                    onInput={(e) => setModelName(e.target.value)}
+                  ></s-text-field>
 
-              <s-button type="button" onClick={addModel}>
-                Add Model
-              </s-button>
-            </s-stack>
-          </s-box>
-        </s-stack>
-      </s-section>
-      <s-section heading="Colors">
-        <s-stack direction="block" gap="base">
-          {colors.map((item) => (
-            <s-box
-              key={item.id}
-              padding="base"
-              borderWidth="base"
-              borderRadius="base"
-            >
-              <s-stack direction="inline" gap="base" align="center">
-                <div
-                  style={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: "4px",
-                    background: item.hex,
-                    border: "1px solid #ccc",
-                  }}
-                />
+                  <s-url-field
+                    label="Model URL (.glb)"
+                    value={modelLink}
+                    // details="Enter your business website"
+                    placeholder="https://cdn.shopify.com/3d/models/91b15463ef682c15/small.glb"
+                    onInput={(e) => setModelLink(e.target.value)}
+                  ></s-url-field>
 
-                <strong>{item.name}</strong>
-                <span>{item.hex}</span>
+                  <s-button type="button" icon="plus" onClick={addModel}>
+                    Add Model
+                  </s-button>
+                </s-stack>
+              </s-box>
+            </s-modal>
+          </s-stack>
+          <s-stack direction="block" gap="base">
+            {models.map((item) => (
+              <s-box
+                key={item.id}
+                padding="base"
+                borderWidth="base"
+                borderRadius="base"
+              >
+                <s-stack
+                  direction="inline"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  gap="base"
+                >
+                  <strong>{item.name}</strong>
 
-                <s-button tone="critical" onClick={() => deleteColor(item.id)}>
-                  Delete
-                </s-button>
-              </s-stack>
-            </s-box>
-          ))}
+                  <a href={item.model_link} target="_blank">
+                    {item.model_link}
+                  </a>
 
-          <s-box padding="base" borderWidth="base" borderRadius="base">
-            <s-stack direction="inline" gap="base">
-              <input
-                placeholder="Color name"
-                value={colorName}
-                onChange={(e) => setColorName(e.target.value)}
-              />
+                  <s-button
+                    tone="critical"
+                    onClick={() => deleteModel(item.id)}
+                  >
+                    Delete
+                  </s-button>
+                </s-stack>
+              </s-box>
+            ))}
+          </s-stack>
+        </s-section>
+        <s-section>
+          <s-stack
+            direction="inline"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <h2>Colors</h2>
 
-              <input
-                placeholder="#FFFFFF"
-                value={colorHex}
-                onChange={(e) => setColorHex(e.target.value)}
-              />
+            <s-button variant="primary" commandFor="colorModal">
+              Add Color
+            </s-button>
 
-              <s-button onClick={addColor}>Add Color</s-button>
-            </s-stack>
-          </s-box>
-        </s-stack>
-      </s-section>
+            <s-modal id="colorModal" heading="Add Model">
+              <s-box padding="base" borderWidth="base" borderRadius="base">
+                <s-stack direction="inline" gap="base">
+                  <s-text-field
+                    label="Color Name"
+                    value={colorName}
+                    placeholder="Black"
+                    onInput={(e) => setColorName(e.target.value)}
+                  ></s-text-field>
 
-      <s-section heading="Logos">
-        <s-stack direction="block" gap="base">
-          {logos.map((item) => (
-            <s-box
-              key={item.id}
-              padding="base"
-              borderWidth="base"
-              borderRadius="base"
-            >
-              <s-stack direction="block">
-                <strong>{item.name}</strong>
+                  <s-text-field
+                    label="Color Hex Value"
+                    value={colorHex}
+                    placeholder="#FFFFFF"
+                    onInput={(e) => setColorHex(e.target.value)}
+                  ></s-text-field>
 
-                <a href={item.logo_file} target="_blank">
-                  {item.logo_file}
-                </a>
-              </s-stack>
-            </s-box>
-          ))}
+                  <s-button type="button" icon="plus" onClick={addColor}>
+                    Add Color
+                  </s-button>
+                </s-stack>
+              </s-box>
+            </s-modal>
+          </s-stack>
+          <s-stack direction="block" gap="base">
+            {colors.map((item) => (
+              <s-box
+                key={item.id}
+                padding="base"
+                borderWidth="base"
+                borderRadius="base"
+              >
+                <s-stack
+                  direction="inline"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  gap="base"
+                >
+                  <s-stack direction="inline" gap="large-100">
+                    <div
+                      style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: "4px",
+                        background: item.hex,
+                        border: "1px solid #ccc",
+                      }}
+                    />
+                    <strong>{item.name}</strong>
+                  </s-stack>
 
-          <s-box padding="base" borderWidth="base" borderRadius="base">
-            <s-stack direction="inline" gap="base">
-              <input
-                placeholder="Logo name"
-                value={logoName}
-                onChange={(e) => setLogoName(e.target.value)}
-              />
+                  <span>{item.hex}</span>
 
-              <input
-                placeholder="Logo URL"
-                value={logoLink}
-                onChange={(e) => setLogoLink(e.target.value)}
-              />
+                  <s-button
+                    tone="critical"
+                    onClick={() => deleteColor(item.id)}
+                  >
+                    Delete
+                  </s-button>
+                </s-stack>
+              </s-box>
+            ))}
+          </s-stack>
+        </s-section>
 
-              <s-button onClick={addLogo}>Add Logo</s-button>
-            </s-stack>
-          </s-box>
-        </s-stack>
-      </s-section>
+        <s-section>
+          <s-stack
+            direction="inline"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <h2>Logos</h2>
+            <s-button variant="primary" commandFor="LogoModal">
+              Add Logo
+            </s-button>
+            <s-modal id="LogoModal" heading="Add Logo">
+              <s-box padding="base" borderWidth="base" borderRadius="base">
+                <s-stack direction="inline" gap="base">
+                  <s-text-field
+                    label="Logo Name"
+                    value={logoName}
+                    placeholder="Nike"
+                    onChange={(e) => setLogoName(e.target.value)}
+                  ></s-text-field>
 
-      <s-section heading="Fonts">
-        <s-stack direction="block" gap="base">
-          {fonts.map((item) => (
-            <s-box
-              key={item.id}
-              padding="base"
-              borderWidth="base"
-              borderRadius="base"
-            >
-              <strong>{item.name}</strong>
-            </s-box>
-          ))}
+                  <s-text-field
+                    label="Logo URL"
+                    placeholder="https://cdn.shopify.com/3d/models/0ef92ba60f004339/Nike.glb"
+                    value={logoLink}
+                    onChange={(e) => setLogoLink(e.target.value)}
+                  ></s-text-field>
 
-          <s-box padding="base" borderWidth="base" borderRadius="base">
-            <s-stack direction="inline" gap="base">
-              <input
-                placeholder="Font name"
-                value={fontName}
-                onChange={(e) => setFontName(e.target.value)}
-              />
+                  <s-button type="button" icon="plus" onClick={addLogo}>
+                    Add Logo
+                  </s-button>
+                </s-stack>
+              </s-box>
+            </s-modal>
+          </s-stack>
+          <s-stack direction="block" gap="base">
+            {logos.map((item) => (
+              <s-box
+                key={item.id}
+                padding="base"
+                borderWidth="base"
+                borderRadius="base"
+              >
+                <s-stack
+                  direction="inline"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  gap="base"
+                >
+                  <strong>{item.name}</strong>
 
-              <input
-                placeholder="Font URL"
-                value={fontLink}
-                onChange={(e) => setFontLink(e.target.value)}
-              />
+                  <a href={item.logo_file} target="_blank">
+                    {item.logo_file}
+                  </a>
 
-              <s-button onClick={addFont}>Add Font</s-button>
-            </s-stack>
-          </s-box>
-        </s-stack>
-      </s-section>
-    </s-page>
+                  <s-button
+                    tone="critical"
+                    onClick={() => deleteLogo(item.id)}
+                  >
+                    Delete
+                  </s-button>
+                </s-stack>
+              </s-box>
+            ))}
+          </s-stack>
+        </s-section>
+
+        <s-section>
+          <s-stack
+            direction="inline"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <h2>Fonts</h2>
+            <s-button variant="primary" commandFor="FontModal">
+              Add Font
+            </s-button>
+            <s-modal id="FontModal" heading="Add Logo">
+              <s-box padding="base" borderWidth="base" borderRadius="base">
+                <s-stack direction="inline" gap="base">
+                  <s-text-field
+                    label="Font Name"
+                    placeholder="Helvetia"
+                    value={fontName}
+                    onChange={(e) => setFontName(e.target.value)}
+                  ></s-text-field>
+
+                  <s-text-field
+                    label="Font URL"
+                    placeholder="https://cdn.shopify.com/s/files/1/0135/5966/0608/files/helve.json?v=1773256094"
+                    value={fontLink}
+                    onChange={(e) => setFontLink(e.target.value)}
+                  ></s-text-field>
+
+                  <s-button type="button" icon="plus" onClick={addFont}>
+                    Add Font
+                  </s-button>
+                </s-stack>
+              </s-box>
+            </s-modal>
+          </s-stack>
+
+          <s-stack direction="block" gap="base">
+            {fonts.map((item) => (
+              <s-box
+                key={item.id}
+                padding="base"
+                borderWidth="base"
+                borderRadius="base"
+              >
+                <s-stack
+                  direction="inline"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  gap="base"
+                >
+                  <strong>{item.name}</strong>
+                  <s-button
+                    tone="critical"
+                    onClick={() => deleteFont(item.id)}
+                  >
+                    Delete
+                  </s-button>
+                </s-stack>
+              </s-box>
+            ))}
+          </s-stack>
+        </s-section>
+      </s-page>
+    </>
   );
 }

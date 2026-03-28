@@ -1,4 +1,4 @@
-export default function AdditionalPage() {
+export default function ConfiguratorDashboard() {
   return (
     <s-page heading="Additional page">
       <s-section heading="Multiple pages">
