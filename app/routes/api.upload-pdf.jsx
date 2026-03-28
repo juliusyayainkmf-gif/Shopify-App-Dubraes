@@ -6,6 +6,12 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+console.log("ENV CHECK:", {
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET ? "EXISTS" : "MISSING",
+});
+
 // ✅ HANDLE CORS PREFLIGHT
 export const loader = async () => {
   return new Response(null, {
@@ -45,33 +51,27 @@ export const action = async ({ request }) => {
         (err, res) => {
           if (err) reject(err);
           else resolve(res);
-        }
+        },
       );
 
       stream.end(buffer);
     });
 
-    return new Response(
-      JSON.stringify({ url: result.secure_url }),
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
-      }
-    );
+    return new Response(JSON.stringify({ url: result.secure_url }), {
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
   } catch (err) {
     console.error("UPLOAD ERROR:", err);
 
-    return new Response(
-      JSON.stringify({ error: err.message }),
-      {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
-      }
-    );
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
   }
 };
