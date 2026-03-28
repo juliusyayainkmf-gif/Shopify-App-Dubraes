@@ -6,11 +6,33 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// ✅ HANDLE CORS PREFLIGHT
+export const loader = async () => {
+  return new Response(null, {
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
+};
+
+// ✅ MAIN API
 export const action = async ({ request }) => {
   try {
     const formData = await request.formData();
     const file = formData.get("file");
     const configId = formData.get("configId");
+
+    if (!file) {
+      return new Response(JSON.stringify({ error: "No file uploaded" }), {
+        status: 400,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
+    }
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
@@ -29,8 +51,27 @@ export const action = async ({ request }) => {
       stream.end(buffer);
     });
 
-    return json({ url: result.secure_url });
+    return new Response(
+      JSON.stringify({ url: result.secure_url }),
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      }
+    );
   } catch (err) {
-    return json({ error: err.message }, { status: 500 });
+    console.error("UPLOAD ERROR:", err);
+
+    return new Response(
+      JSON.stringify({ error: err.message }),
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      }
+    );
   }
 };
