@@ -6,12 +6,14 @@ const uploadFromBuffer = (buffer, configId) => {
     const stream = cloudinary.uploader.upload_stream(
       {
         resource_type: "raw",
-        public_id: `configs/${configId}`,
+        folder: "configs",
+        public_id: configId,
+        format: "pdf",
       },
       (error, result) => {
         if (result) resolve(result);
         else reject(error);
-      }
+      },
     );
 
     streamifier.createReadStream(buffer).pipe(stream);
@@ -22,12 +24,6 @@ cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-console.log("ENV CHECK:", {
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET ? "EXISTS" : "MISSING",
 });
 
 // ✅ HANDLE CORS PREFLIGHT
@@ -59,7 +55,6 @@ export const action = async ({ request }) => {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-
 
     const result = await uploadFromBuffer(buffer, configId);
 
