@@ -42,20 +42,15 @@ export const action = async ({ request }) => {
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    const result = await new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        {
-          resource_type: "raw",
-          public_id: `configs/${configId}`,
-        },
-        (err, res) => {
-          if (err) reject(err);
-          else resolve(res);
-        },
-      );
+    const base64 = buffer.toString("base64");
 
-      stream.end(buffer);
-    });
+    const result = await cloudinary.uploader.upload(
+      `data:application/pdf;base64,${base64}`,
+      {
+        resource_type: "raw",
+        public_id: `configs/${configId}`,
+      },
+    );
 
     return new Response(JSON.stringify({ url: result.secure_url }), {
       headers: {
