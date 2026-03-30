@@ -15,6 +15,7 @@ export const action = async () => {
     });
 
     const result = await cloudinary.api.resources({
+      resource_type: "raw",
       max_results: 50,
     });
 
