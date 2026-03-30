@@ -8,14 +8,20 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+const getCorsHeaders = () => ({
+  "Access-Control-Allow-Origin": "https://admin.shopify.com",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+});
+
 const uploadImageFromBuffer = (buffer, configId) => {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
         resource_type: "image",
         folder: "custom-logos",
-        public_id: configId,
-        overwrite: true,
+        public_id: `${configId}-${Date.now()}`, 
+        overwrite: false,
 
         transformation: [
           { width: 1024, crop: "limit" },
@@ -32,39 +38,65 @@ const uploadImageFromBuffer = (buffer, configId) => {
   });
 };
 
+// ✅ Handle preflight
 export const loader = async () => {
   return new Response(null, {
-    headers: {
-      "Access-Control-Allow-Origin": "https://admin.shopify.com",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    },
+    headers: getCorsHeaders(),
   });
 };
 
 export const action = async ({ request }) => {
-  try {
-    const { admin } = await authenticate.admin(request);
+  const corsHeaders = getCorsHeaders();
 
-    console.log(admin);
-    
+  try {
+    // 🔒 Shopify Admin authentication (KEEP THIS)
+    await authenticate.admin(request);
+
     const formData = await request.formData();
     const file = formData.get("file");
     const configId = formData.get("configId");
 
+    // ✅ Validation
     if (!file) {
       return new Response(JSON.stringify({ error: "No file uploaded" }), {
         status: 400,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "https://admin.shopify.com",
-        },
+        headers: corsHeaders,
+      });
+    }
+
+    if (!file.type.startsWith("image/")) {
+      return new Response(JSON.stringify({ error: "Only images allowed" }), {
+        status: 400,
+        headers: corsHeaders,
+      });
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      return new Response(JSON.stringify({ error: "Max 2MB only" }), {
+        status: 400,
+        headers: corsHeaders,
+      });
+    }
+
+    if (!configId) {
+      return new Response(JSON.stringify({ error: "Missing configId" }), {
+        status: 400,
+        headers: corsHeaders,
+      });
+    }
+
+    const safeConfigId = configId.replace(/[^a-zA-Z0-9_-]/g, "");
+
+    if (!safeConfigId) {
+      return new Response(JSON.stringify({ error: "Invalid configId" }), {
+        status: 400,
+        headers: corsHeaders,
       });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    const result = await uploadImageFromBuffer(buffer, configId);
+    const result = await uploadImageFromBuffer(buffer, safeConfigId);
 
     return new Response(
       JSON.stringify({
@@ -74,7 +106,7 @@ export const action = async ({ request }) => {
       {
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "https://admin.shopify.com",
+          ...corsHeaders,
         },
       }
     );
@@ -83,10 +115,7 @@ export const action = async ({ request }) => {
 
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "https://admin.shopify.com",
-      },
+      headers: corsHeaders,
     });
   }
 };
