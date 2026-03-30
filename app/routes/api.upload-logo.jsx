@@ -7,21 +7,24 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const uploadFromBuffer = (buffer, configId) => {
+const uploadImageFromBuffer = (buffer, configId) => {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
-        resource_type: "raw",
-        folder: "configs",
+        resource_type: "image",
+        folder: "custom-logos",
         public_id: configId,
-        type: "upload",
-        access_mode: "public",
-        format: "pdf",
+        overwrite: true,
+
+        transformation: [
+          { width: 1024, crop: "limit" },
+          { quality: "auto" },
+        ],
       },
       (error, result) => {
         if (result) resolve(result);
         else reject(error);
-      },
+      }
     );
 
     streamifier.createReadStream(buffer).pipe(stream);
@@ -56,16 +59,22 @@ export const action = async ({ request }) => {
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    const result = await uploadFromBuffer(buffer, configId);
+    const result = await uploadImageFromBuffer(buffer, configId);
 
-    return new Response(JSON.stringify({ url: result.secure_url }), {
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
-    });
+    return new Response(
+      JSON.stringify({
+        url: result.secure_url,
+        public_id: result.public_id,
+      }),
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      }
+    );
   } catch (err) {
-    console.error("UPLOAD ERROR:", err);
+    console.error("UPLOAD LOGO ERROR:", err);
 
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
