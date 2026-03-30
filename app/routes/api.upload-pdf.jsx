@@ -31,6 +31,8 @@ const uploadFromBuffer = (buffer, configId) => {
         resource_type: "raw",
         folder: "configs",
         public_id: configId,
+        type: "upload",
+        access_mode: "public",
         format: "pdf",
       },
       (error, result) => {
