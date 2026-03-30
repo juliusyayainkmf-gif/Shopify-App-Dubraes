@@ -13,14 +13,23 @@ const allowedOrigins = [
   "https://www.dubraes.com",
 ];
 
-// helper to generate CORS headers dynamically
 const getCorsHeaders = (request) => {
   const origin = request.headers.get("origin");
 
+  let allowedOrigin = "null";
+
+  if (
+    origin &&
+    (
+      origin.endsWith(".myshopify.com") || 
+      origin === "https://www.dubraes.com"
+    )
+  ) {
+    allowedOrigin = origin;
+  }
+
   return {
-    "Access-Control-Allow-Origin": allowedOrigins.includes(origin)
-      ? origin
-      : "null",
+    "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, x-api-key",
   };
