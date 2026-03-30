@@ -11,7 +11,7 @@ const uploadFromBuffer = (buffer, configId) => {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
-        resource_type: "raw", // 🔥 important for PDFs
+        resource_type: "auto", // 🔥 important for PDFs
         folder: "configs",
         public_id: configId,
         type: "upload",
