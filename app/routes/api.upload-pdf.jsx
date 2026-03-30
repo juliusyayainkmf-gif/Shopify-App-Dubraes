@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import streamifier from "streamifier";
+import { authenticate } from "../shopify.server";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -31,7 +32,7 @@ const uploadFromBuffer = (buffer, configId) => {
 export const loader = async () => {
   return new Response(null, {
     headers: {
-      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Origin": "https://admin.shopify.com",
       "Access-Control-Allow-Methods": "POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     },
@@ -40,6 +41,10 @@ export const loader = async () => {
 
 export const action = async ({ request }) => {
   try {
+    const { admin } = await authenticate.admin(request);
+
+    console.log(admin);
+
     const formData = await request.formData();
     const file = formData.get("file");
     const configId = formData.get("configId");
@@ -49,7 +54,7 @@ export const action = async ({ request }) => {
         status: 400,
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Origin": "https://admin.shopify.com",
         },
       });
     }
@@ -61,7 +66,7 @@ export const action = async ({ request }) => {
     return new Response(JSON.stringify({ url: result.secure_url }), {
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Origin": "https://admin.shopify.com",
       },
     });
   } catch (err) {
@@ -71,7 +76,7 @@ export const action = async ({ request }) => {
       status: 500,
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Origin": "https://admin.shopify.com",
       },
     });
   }
