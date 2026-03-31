@@ -15,10 +15,12 @@ const allowedOrigins = [
 const getCorsHeaders = (request) => {
   const origin = request.headers.get("origin");
 
+  const allowedOrigin = allowedOrigins.includes(origin)
+    ? origin
+    : "https://dubraes-inventory-dashboard.myshopify.com"; // fallback
+
   return {
-    "Access-Control-Allow-Origin": allowedOrigins.includes(origin)
-      ? origin
-      : "",
+    "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };
@@ -66,6 +68,15 @@ export const loader = async ({ request }) => {
 // ✅ Upload handler
 export const action = async ({ request }) => {
   const corsHeaders = getCorsHeaders(request);
+
+    // ✅ HANDLE PREFLIGHT HERE
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders,
+    });
+  }
+
 
   try {
     const formData = await request.formData();
