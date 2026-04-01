@@ -82,19 +82,22 @@ export default function ConfiguratorData() {
 
   return (
     <>
-      <style>
-        {`
-          .overlay:hover,
-          div:hover > .overlay {
-            opacity: 1 !important;
-          }
-        `}
-      </style>
-
       <s-page heading="Configurator Library">
         <div style={{ padding: "16px" }}>
           {loading ? (
-            <s-text>Loading...</s-text>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "60vh", // or "100vh" if you want full screen
+                flexDirection: "column",
+                gap: "12px",
+              }}
+            >
+              <div className="spinner"></div>
+              <s-text>Loading...</s-text>
+            </div>
           ) : (
             <div
               style={{ display: "flex", flexDirection: "column", gap: "24px" }}
