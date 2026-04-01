@@ -9,27 +9,32 @@ export const action = async () => {
     });
 
     const result = await cloudinary.api.resources({
-      max_results: 50,
+      max_results: 1000,
     });
 
     console.log("CLOUDINARY RAW:", result);
 
-    return new Response(JSON.stringify({
-      success: true,
-      count: result.resources.length,
-      resources: result.resources,
-    }), {
-      headers: { "Content-Type": "application/json" },
-    });
-
+    return new Response(
+      JSON.stringify({
+        success: true,
+        count: result.resources.length,
+        resources: result.resources,
+      }),
+      {
+        headers: { "Content-Type": "application/json" },
+      },
+    );
   } catch (err) {
     console.error("CLOUDINARY ERROR:", err);
 
-    return new Response(JSON.stringify({
-      success: false,
-      error: err.message,
-    }), {
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: err.message,
+      }),
+      {
+        headers: { "Content-Type": "application/json" },
+      },
+    );
   }
 };
