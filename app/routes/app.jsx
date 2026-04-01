@@ -21,7 +21,7 @@ export default function App() {
           Configurator Dashboard
         </s-link>
         <s-link href="/app/configurator_settings">Configurator Settings</s-link>
-        <s-link href="/app/configurator_data">Configurator Data</s-link>
+        <s-link href="/app/configurator_pdf">Configurator PDF and Logos</s-link>
       </s-app-nav>
       <Outlet />
     </AppProvider>

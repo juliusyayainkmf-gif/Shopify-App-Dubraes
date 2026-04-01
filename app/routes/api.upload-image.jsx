@@ -31,8 +31,7 @@ const uploadImageFromBuffer = (buffer, configId) => {
         resource_type: "image",
         folder: "configs/images",
         public_id: `img-${configId}-${Date.now()}`,
-        
-        // 🔥 Optional optimizations
+
         transformation: [
           { width: 1200, crop: "limit" },
           { quality: "auto" },
@@ -49,7 +48,6 @@ const uploadImageFromBuffer = (buffer, configId) => {
   });
 };
 
-// ✅ OPTIONS (preflight)
 export const loader = async ({ request }) => {
   if (request.method === "OPTIONS") {
     return new Response(null, {
@@ -63,11 +61,9 @@ export const loader = async ({ request }) => {
   });
 };
 
-// ✅ Upload handler
 export const action = async ({ request }) => {
   const corsHeaders = getCorsHeaders(request);
 
-    // ✅ HANDLE PREFLIGHT HERE
   if (request.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
@@ -122,6 +118,7 @@ export const action = async ({ request }) => {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
+    console.log("Buffer size:", buffer.length);
 
     const result = await uploadImageFromBuffer(buffer, safeConfigId);
 
