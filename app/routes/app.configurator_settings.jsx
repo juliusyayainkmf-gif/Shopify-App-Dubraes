@@ -42,6 +42,17 @@ export const action = async ({ request }) => {
     });
   }
 
+  if (actionType === "addLogoColor") {
+    return createMetaobject(admin, {
+      type: "configurator_color_logo",
+      fields: [
+        { key: "name", value: formData.get("name") },
+        { key: "hex_color", value: formData.get("hex_color") },
+      ],
+      successMessage: "Logo Color added successfully",
+    });
+  }
+
   if (actionType === "addLogo") {
     return createMetaobject(admin, {
       type: "configurator_logo",
@@ -69,7 +80,8 @@ export const action = async ({ request }) => {
     actionType === "deleteModel" ||
     actionType === "deleteColor" ||
     actionType === "deleteLogo" ||
-    actionType === "deleteFont"
+    actionType === "deleteFont" ||
+    actionType === "deleteLogoColor"
   ) {
     return deleteMetaobject(admin, formData.get("id"));
   }
@@ -81,7 +93,13 @@ export const action = async ({ request }) => {
 };
 
 export default function ConfiguratorAdmin() {
-  const { models, colors, logos, fonts } = useLoaderData();
+  const {
+    models = [],
+    colors = [],
+    logos = [],
+    fonts = [],
+    logoColors = [],
+  } = useLoaderData();
   const fetcher = useFetcher();
 
   // ---------------- STATE ----------------
@@ -96,6 +114,9 @@ export default function ConfiguratorAdmin() {
 
   const [fontName, setFontName] = useState("");
   const [fontLink, setFontLink] = useState("");
+
+  const [logoColorName, setLogoColorName] = useState("");
+  const [logoColorHex, setLogoColorHex] = useState("");
 
   const [banner, setBanner] = useState(null);
   const isLoading = fetcher.state !== "idle";
@@ -136,6 +157,27 @@ export default function ConfiguratorAdmin() {
     fetcher.submit(
       {
         action: "deleteColor",
+        id,
+      },
+      { method: "post" },
+    );
+  };
+
+  const addLogoColor = () => {
+    fetcher.submit(
+      {
+        action: "addLogoColor",
+        name: logoColorName,
+        hex: logoColorHex,
+      },
+      { method: "post" },
+    );
+  };
+
+  const deleteLogoColor = (id) => {
+    fetcher.submit(
+      {
+        action: "deleteLogoColor",
         id,
       },
       { method: "post" },
@@ -311,6 +353,129 @@ export default function ConfiguratorAdmin() {
             ))}
           </s-stack>
         </s-section>
+
+        <s-section>
+          <s-stack
+            direction="inline"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <h2>Logos</h2>
+            <s-button variant="primary" commandFor="LogoModal">
+              Add Logo
+            </s-button>
+            <s-modal id="LogoModal" heading="Add Logo">
+              <s-box padding="base" borderWidth="base" borderRadius="base">
+                <s-stack direction="inline" gap="base">
+                  <s-text-field
+                    label="Logo Name"
+                    value={logoName}
+                    placeholder="Nike"
+                    onChange={(e) => setLogoName(e.target.value)}
+                  ></s-text-field>
+
+                  <s-text-field
+                    label="Logo URL"
+                    placeholder="https://cdn.shopify.com/3d/models/0ef92ba60f004339/Nike.glb"
+                    value={logoLink}
+                    onChange={(e) => setLogoLink(e.target.value)}
+                  ></s-text-field>
+
+                  <s-button type="button" icon="plus" onClick={addLogo}>
+                    Add Logo
+                  </s-button>
+                </s-stack>
+              </s-box>
+            </s-modal>
+          </s-stack>
+          <s-stack direction="block" gap="base">
+            {logos.map((item) => (
+              <s-box
+                key={item.id}
+                padding="base"
+                borderWidth="base"
+                borderRadius="base"
+              >
+                <s-stack
+                  direction="inline"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  gap="base"
+                >
+                  <strong>{item.name}</strong>
+
+                  <a href={item.logo_file} target="_blank">
+                    {item.logo_file}
+                  </a>
+
+                  <s-button tone="critical" onClick={() => deleteLogo(item.id)}>
+                    Delete
+                  </s-button>
+                </s-stack>
+              </s-box>
+            ))}
+          </s-stack>
+        </s-section>
+
+        <s-section>
+          <s-stack
+            direction="inline"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <h2>Fonts</h2>
+            <s-button variant="primary" commandFor="FontModal">
+              Add Font
+            </s-button>
+            <s-modal id="FontModal" heading="Add Logo">
+              <s-box padding="base" borderWidth="base" borderRadius="base">
+                <s-stack direction="inline" gap="base">
+                  <s-text-field
+                    label="Font Name"
+                    placeholder="Helvetia"
+                    value={fontName}
+                    onChange={(e) => setFontName(e.target.value)}
+                  ></s-text-field>
+
+                  <s-text-field
+                    label="Font URL"
+                    placeholder="https://cdn.shopify.com/s/files/1/0135/5966/0608/files/helve.json?v=1773256094"
+                    value={fontLink}
+                    onChange={(e) => setFontLink(e.target.value)}
+                  ></s-text-field>
+
+                  <s-button type="button" icon="plus" onClick={addFont}>
+                    Add Font
+                  </s-button>
+                </s-stack>
+              </s-box>
+            </s-modal>
+          </s-stack>
+
+          <s-stack direction="block" gap="base">
+            {fonts.map((item) => (
+              <s-box
+                key={item.id}
+                padding="base"
+                borderWidth="base"
+                borderRadius="base"
+              >
+                <s-stack
+                  direction="inline"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  gap="base"
+                >
+                  <strong>{item.name}</strong>
+                  <s-button tone="critical" onClick={() => deleteFont(item.id)}>
+                    Delete
+                  </s-button>
+                </s-stack>
+              </s-box>
+            ))}
+          </s-stack>
+        </s-section>
+
         <s-section>
           <s-stack
             direction="inline"
@@ -374,8 +539,6 @@ export default function ConfiguratorAdmin() {
                     <strong>{item.name}</strong>
                   </s-stack>
 
-                  <span>{item.hex}</span>
-
                   <s-button
                     tone="critical"
                     onClick={() => deleteColor(item.id)}
@@ -394,36 +557,38 @@ export default function ConfiguratorAdmin() {
             justifyContent="space-between"
             alignItems="center"
           >
-            <h2>Logos</h2>
-            <s-button variant="primary" commandFor="LogoModal">
-              Add Logo
+            <h2>Logo Colors</h2>
+
+            <s-button variant="primary" commandFor="logoColorModal">
+              Add Logo Color
             </s-button>
-            <s-modal id="LogoModal" heading="Add Logo">
+
+            <s-modal id="logoColorModal" heading="Add Logo Color">
               <s-box padding="base" borderWidth="base" borderRadius="base">
                 <s-stack direction="inline" gap="base">
                   <s-text-field
-                    label="Logo Name"
-                    value={logoName}
-                    placeholder="Nike"
-                    onChange={(e) => setLogoName(e.target.value)}
+                    label="Logo Color Name"
+                    value={logoColorName}
+                    placeholder="Black"
+                    onInput={(e) => setLogoColorName(e.target.value)}
                   ></s-text-field>
 
                   <s-text-field
-                    label="Logo URL"
-                    placeholder="https://cdn.shopify.com/3d/models/0ef92ba60f004339/Nike.glb"
-                    value={logoLink}
-                    onChange={(e) => setLogoLink(e.target.value)}
+                    label="Color Hex Value"
+                    value={logoColorHex}
+                    placeholder="#FFFFFF"
+                    onInput={(e) => setLogoColorHex(e.target.value)}
                   ></s-text-field>
 
-                  <s-button type="button" icon="plus" onClick={addLogo}>
-                    Add Logo
+                  <s-button type="button" icon="plus" onClick={addLogoColor}>
+                    Add Logo Color
                   </s-button>
                 </s-stack>
               </s-box>
             </s-modal>
           </s-stack>
           <s-stack direction="block" gap="base">
-            {logos.map((item) => (
+            {logoColors.map((item) => (
               <s-box
                 key={item.id}
                 padding="base"
@@ -436,77 +601,23 @@ export default function ConfiguratorAdmin() {
                   alignItems="center"
                   gap="base"
                 >
-                  <strong>{item.name}</strong>
-
-                  <a href={item.logo_file} target="_blank">
-                    {item.logo_file}
-                  </a>
+                  <s-stack direction="inline" gap="large-100">
+                    <div
+                      style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: "4px",
+                        background: item.hex_color,
+                        border: "1px solid #ccc",
+                      }}
+                    />
+                    <p>{item.hex}</p>
+                    <strong>{item.name}</strong>
+                  </s-stack>
 
                   <s-button
                     tone="critical"
-                    onClick={() => deleteLogo(item.id)}
-                  >
-                    Delete
-                  </s-button>
-                </s-stack>
-              </s-box>
-            ))}
-          </s-stack>
-        </s-section>
-
-        <s-section>
-          <s-stack
-            direction="inline"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <h2>Fonts</h2>
-            <s-button variant="primary" commandFor="FontModal">
-              Add Font
-            </s-button>
-            <s-modal id="FontModal" heading="Add Logo">
-              <s-box padding="base" borderWidth="base" borderRadius="base">
-                <s-stack direction="inline" gap="base">
-                  <s-text-field
-                    label="Font Name"
-                    placeholder="Helvetia"
-                    value={fontName}
-                    onChange={(e) => setFontName(e.target.value)}
-                  ></s-text-field>
-
-                  <s-text-field
-                    label="Font URL"
-                    placeholder="https://cdn.shopify.com/s/files/1/0135/5966/0608/files/helve.json?v=1773256094"
-                    value={fontLink}
-                    onChange={(e) => setFontLink(e.target.value)}
-                  ></s-text-field>
-
-                  <s-button type="button" icon="plus" onClick={addFont}>
-                    Add Font
-                  </s-button>
-                </s-stack>
-              </s-box>
-            </s-modal>
-          </s-stack>
-
-          <s-stack direction="block" gap="base">
-            {fonts.map((item) => (
-              <s-box
-                key={item.id}
-                padding="base"
-                borderWidth="base"
-                borderRadius="base"
-              >
-                <s-stack
-                  direction="inline"
-                  justifyContent="space-between"
-                  alignItems="center"
-                  gap="base"
-                >
-                  <strong>{item.name}</strong>
-                  <s-button
-                    tone="critical"
-                    onClick={() => deleteFont(item.id)}
+                    onClick={() => deleteLogoColor(item.id)}
                   >
                     Delete
                   </s-button>

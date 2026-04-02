@@ -44,17 +44,75 @@ export default function ConfiguratorData() {
     setOpenMenu(openMenu === id ? null : id);
   };
 
-  const handleDelete = (file) => {
-    console.log("Delete:", file.public_id);
-    // TODO: call backend API
+  const handleDelete = async (file) => {
+    const confirmDelete = confirm("Delete this file?");
+    if (!confirmDelete) return;
+
+    try {
+      const res = await fetch("/api/delete-pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          public_id: file.public_id,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        alert("Delete failed: " + (data.error || "Unknown error"));
+        return;
+      }
+
+      // ✅ remove from UI instantly
+      setFiles((prev) => prev.filter((f) => f.public_id !== file.public_id));
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong");
+    }
   };
 
-  const handleRename = (file) => {
+  const handleRename = async (file) => {
     const newName = prompt("Enter new name:");
     if (!newName) return;
 
-    console.log("Rename:", file.public_id, "→", newName);
-    // TODO: call backend API
+    try {
+      const res = await fetch("/api/rename-pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          public_id: file.public_id,
+          new_name: newName,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        alert("Rename failed: " + (data.error || "Unknown error"));
+        return;
+      }
+
+      // ✅ update UI instantly
+      setFiles((prev) =>
+        prev.map((f) =>
+          f.public_id === file.public_id
+            ? {
+                ...f,
+                public_id: data.result.public_id, // updated name
+                secure_url: data.result.secure_url, // updated URL
+              }
+            : f,
+        ),
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong");
+    }
   };
 
   useEffect(() => {
@@ -236,6 +294,10 @@ export default function ConfiguratorData() {
                           borderRadius: "16px",
                           overflow: "hidden",
                           cursor: "pointer",
+                          background: "white",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
                         }}
                       >
                         {/* THREE DOTS */}

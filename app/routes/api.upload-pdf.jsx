@@ -1,28 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import streamifier from "streamifier";
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-const allowedOrigins = [
-  "https://dubraes-inventory-dashboard.myshopify.com",
-  "https://www.dubraes.com",
-];
-
-const getCorsHeaders = (request) => {
-  const origin = request.headers.get("origin");
-
-  return {
-    "Access-Control-Allow-Origin": allowedOrigins.includes(origin)
-      ? origin
-      : "null",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-  };
-};
+import { getCorsHeaders } from "../utils/cors.server";
 
 const uploadFromBuffer = (buffer, configId) => {
   return new Promise((resolve, reject) => {
@@ -45,7 +23,6 @@ const uploadFromBuffer = (buffer, configId) => {
   });
 };
 
-// ✅ Handle preflight properly
 export const loader = async ({ request }) => {
   return new Response(null, {
     headers: getCorsHeaders(request),
@@ -60,7 +37,6 @@ export const action = async ({ request }) => {
     const file = formData.get("file");
     const configId = formData.get("configId");
 
-    // ✅ Validation
     if (!file) {
       return new Response(JSON.stringify({ error: "No file uploaded" }), {
         status: 400,

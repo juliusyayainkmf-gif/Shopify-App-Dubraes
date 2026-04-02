@@ -21,6 +21,15 @@ export async function getConfiguratorData(admin) {
         }
       }
 
+      logoColors: metaobjects(type: "configurator_color_logo", first: 50) {
+        edges {
+          node {
+            id
+            fields { key value }
+          }
+        }
+      }
+
       logos: metaobjects(type: "configurator_logo", first: 50) {
         edges {
           node {
@@ -85,6 +94,7 @@ export async function getConfiguratorData(admin) {
   return {
     models: json.data.models.edges.map((e) => parseFields(e.node)),
     colors: json.data.colors.edges.map((e) => parseFields(e.node)),
+    logoColors: json.data.logoColors.edges.map((e) => parseFields(e.node)),
     logos: json.data.logos.edges.map((e) => parseFields(e.node)),
     fonts: json.data.fonts.edges.map((e) => parseFields(e.node)),
   };
