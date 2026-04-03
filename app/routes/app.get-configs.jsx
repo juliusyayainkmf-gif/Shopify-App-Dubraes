@@ -14,27 +14,22 @@ export const action = async () => {
 
     console.log("CLOUDINARY RAW:", result);
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        count: result.resources.length,
-        resources: result.resources,
-      }),
-      {
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    return new Response(JSON.stringify({
+      success: true,
+      count: result.resources.length,
+      resources: result.resources,
+    }), {
+      headers: { "Content-Type": "application/json" },
+    });
+
   } catch (err) {
     console.error("CLOUDINARY ERROR:", err);
 
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: err.message,
-      }),
-      {
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    return new Response(JSON.stringify({
+      success: false,
+      error: err.message,
+    }), {
+      headers: { "Content-Type": "application/json" },
+    });
   }
 };
