@@ -1,6 +1,28 @@
 import { v2 as cloudinary } from "cloudinary";
 import streamifier from "streamifier";
-import { getCorsHeaders } from "../utils/cors.server";
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const allowedOrigins = [
+  "https://dubraes-inventory-dashboard.myshopify.com",
+  "https://www.dubraes.com",
+];
+
+const getCorsHeaders = (request) => {
+  const origin = request.headers.get("origin");
+
+  return {
+    "Access-Control-Allow-Origin": allowedOrigins.includes(origin)
+      ? origin
+      : "null",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+  };
+};
 
 const uploadFromBuffer = (buffer, configId) => {
   return new Promise((resolve, reject) => {
