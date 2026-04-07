@@ -21,7 +21,6 @@ export const action = async ({ request }) => {
       });
     }
 
-    // 🧠 IMPORTANT: PDFs = RAW
     const result = await cloudinary.uploader.destroy(public_id, {
       resource_type: "image",
     });

@@ -16,10 +16,8 @@ export default function App() {
   return (
     <AppProvider embedded apiKey={apiKey}>
       <s-app-nav>
-        <s-link href="/app">Home</s-link>
-        <s-link href="/app/configurator_dashboard">
-          Configurator Dashboard
-        </s-link>
+        <s-link href="/app">Configurator Home</s-link>
+        <s-link href="/app/configurator_shoes">Configurator Shoes</s-link>
         <s-link href="/app/configurator_settings">Configurator Settings</s-link>
         <s-link href="/app/configurator_pdf">Configurator PDF and Logos</s-link>
       </s-app-nav>

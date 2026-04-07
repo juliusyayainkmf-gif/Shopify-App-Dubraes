@@ -21,7 +21,6 @@ export const action = async ({ request }) => {
       );
     }
 
-    // ✅ sanitize new name
     const safeName = new_name.replace(/[^a-zA-Z0-9_-]/g, "");
     if (!safeName) {
       return new Response(
@@ -30,11 +29,9 @@ export const action = async ({ request }) => {
       );
     }
 
-    // ✅ keep same folder (configs/)
     const folder = public_id.split("/")[0];
     const new_public_id = `${folder}/${safeName}`;
 
-    // ⚠️ IMPORTANT: you used resource_type: "image" for PDFs
     const result = await cloudinary.uploader.rename(
       public_id,
       new_public_id,
