@@ -1,8 +1,3 @@
-const test = {
-"AF1": "asdas",
-
-}
-
 export default function Index() {
   return (
     <s-page heading="Dubraes Configurator Dashboard">
