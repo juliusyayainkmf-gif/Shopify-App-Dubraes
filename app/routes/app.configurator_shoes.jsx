@@ -1,62 +1,96 @@
-"use client";
+import { authenticate } from "../shopify.server";
+import { getConfiguratorData } from "../services/metaobjects.server";
+import { useState, useEffect } from "react";
+import { useLoaderData } from "react-router";
+import { useFetcher } from "react-router";
 
-import { useState } from "react";
+
+export const loader = async ({ request }) => {
+  const { admin } = await authenticate.admin(request);
+  return await getConfiguratorData(admin);
+};
+
+export const action = async ({ request }) => {
+  const { admin } = await authenticate.admin(request);
+  const formData = await request.formData();
+
+  const actionType = formData.get("action");
+
+  if (actionType === "updateSettings") {
+    const currentShoe = formData.get("current_shoe");
+
+    const data = await getConfiguratorData(admin);
+    const settingsId = data.settings[0]?.id;
+
+    const selected = data.shoes.find((s) => s.name === currentShoe);
+    const shoesLink = selected?.shoes_link || "";
+
+    return await admin.graphql(`
+      mutation {
+        metaobjectUpdate(
+          id: "${settingsId}",
+          metaobject: {
+            fields: [
+              { key: "current_shoe", value: "${currentShoe}" },
+              { key: "current_shoe_link", value: "${shoesLink}" }
+            ]
+          }
+        ) {
+          metaobject { id }
+        }
+      }
+    `);
+  }
+
+  return null;
+};
 
 export default function Index() {
-  const MODEL_LINKS = {
-    af1: {
-      low: {
-        withLogo: {
-          white:
-            "https://cdn.shopify.com/3d/models/.../airforce1_withLogo_white.glb",
-          black:
-            "https://cdn.shopify.com/3d/models/.../airforce1_withLogo_black.glb",
-        },
-        withoutLogo: {
-          white:
-            "https://cdn.shopify.com/3d/models/.../airforce1_noLogo_white.glb",
-          black:
-            "https://cdn.shopify.com/3d/models/.../airforce1_noLogo_black.glb",
-        },
-      },
-      mid: {
-        withLogo: {
-          white:
-            "https://cdn.shopify.com/3d/models/.../airforce1_mid_withLogo_white.glb",
-          black:
-            "https://cdn.shopify.com/3d/models/.../airforce1_mid_withLogo_black.glb",
-        },
-        withoutLogo: {
-          white:
-            "https://cdn.shopify.com/3d/models/.../airforce1_mid_noLogo_white.glb",
-          black:
-            "https://cdn.shopify.com/3d/models/.../airforce1_mid_noLogo_black.glb",
-        },
-      },
-    },
+  const { shoes = [], settings = [] } = useLoaderData();
+  const fetcher = useFetcher();
 
-    superstar: {
-      withLogo: {
-        white:
-          "https://cdn.shopify.com/3d/models/.../superstar_withLogo_white.glb",
-        black:
-          "https://cdn.shopify.com/3d/models/.../superstar_withLogo_black.glb",
-      },
-      withoutLogo: {
-        white:
-          "https://cdn.shopify.com/3d/models/.../superstar_noLogo_white.glb",
-        black:
-          "https://cdn.shopify.com/3d/models/.../superstar_noLogo_black.glb",
-      },
-    },
-  };
+  const currentShoe = settings[0]?.current_shoe;
+
+  useEffect(() => {
+    if (!currentShoe) return;
+
+    const parts = currentShoe.split("_");
+
+    setModel(parts[0]);
+
+    if (parts.length === 4) {
+      setType(parts[1]);
+      setLogo(parts[2]);
+      setColor(parts[3]);
+    } else {
+      setLogo(parts[1]);
+      setColor(parts[2]);
+    }
+  }, [currentShoe]);
+
+  const [MODEL_LINKS, setModelLinks] = useState({});
+
+  useEffect(() => {
+    const map = {};
+
+    shoes.forEach((item) => {
+      map[item.name] = item.shoes_link;
+    });
+
+    setModelLinks(map);
+  }, [shoes]);
 
   function generateLink() {
     try {
+      let key = "";
+
       if (model === "superstar") {
-        return MODEL_LINKS.superstar[logo][color];
+        key = `${model}_${logo}_${color}`;
+      } else {
+        key = `${model}_${type}_${logo}_${color}`;
       }
-      return MODEL_LINKS.af1[type][logo][color];
+
+      return MODEL_LINKS[key] || "No model found";
     } catch {
       return "No model found";
     }
@@ -68,6 +102,24 @@ export default function Index() {
   const [color, setColor] = useState("white");
 
   const [copied, setCopied] = useState(false);
+
+  function applyChanges() {
+    let key = "";
+
+    if (model === "superstar") {
+      key = `${model}_${logo}_${color}`;
+    } else {
+      key = `${model}_${type}_${logo}_${color}`;
+    }
+
+    fetcher.submit(
+      {
+        action: "updateSettings",
+        current_shoe: key,
+      },
+      { method: "post" },
+    );
+  }
 
   function cardStyle(active) {
     return {
@@ -92,7 +144,6 @@ export default function Index() {
 
   return (
     <s-page heading="Dubraes Configurator">
-      {/* ================= HEADER ================= */}
       <div
         style={{
           display: "flex",
@@ -102,9 +153,11 @@ export default function Index() {
         }}
       >
         <h2 style={{ margin: 0 }}>Select Choices</h2>
-
-        <s-button variant="primary">Apply Changes</s-button>
+        <s-button variant="primary" onClick={applyChanges}>
+          Apply Changes
+        </s-button>
       </div>
+
       <div
         style={{
           display: "grid",
@@ -113,7 +166,6 @@ export default function Index() {
           minHeight: "500px",
         }}
       >
-        {/* ================= LEFT SIDE (SETTINGS) ================= */}
         <div
           style={{
             padding: "20px",
@@ -122,7 +174,6 @@ export default function Index() {
           }}
         >
           <div style={{ display: "grid", gap: "20px" }}>
-            {/* MODEL */}
             <div>
               <h4>Model</h4>
               <div style={sectionRow()}>
@@ -141,7 +192,6 @@ export default function Index() {
               </div>
             </div>
 
-            {/* TYPE */}
             {model === "af1" && (
               <div>
                 <h4>Type</h4>
@@ -162,7 +212,6 @@ export default function Index() {
               </div>
             )}
 
-            {/* LOGO */}
             <div>
               <h4>Logo</h4>
               <div style={sectionRow()}>
@@ -181,7 +230,6 @@ export default function Index() {
               </div>
             </div>
 
-            {/* COLOR */}
             <div style={{ marginBottom: "40px" }}>
               <h4>Color</h4>
               <div style={sectionRow()}>
@@ -203,10 +251,7 @@ export default function Index() {
 
           <div style={{ display: "flex", gap: "10px", alignItems: "end" }}>
             <div style={{ flex: 1 }}>
-              <s-url-field
-                value={generateLink()}
-                label="3D Model Shoes URL"
-              ></s-url-field>
+              <s-url-field value={generateLink()} label="3D Model Shoes URL" />
             </div>
 
             <s-button
@@ -221,7 +266,6 @@ export default function Index() {
           </div>
         </div>
 
-        {/* ================= RIGHT SIDE (OUTPUT / PREVIEW) ================= */}
         <div
           style={{
             border: "1px solid #e5e7eb",
@@ -234,7 +278,6 @@ export default function Index() {
             color: "#666",
           }}
         >
-          {/* PLACEHOLDER */}
           <div style={{ textAlign: "center" }}>
             <div>🖼 Preview Area</div>
             <div style={{ fontSize: "14px", marginTop: "10px" }}>

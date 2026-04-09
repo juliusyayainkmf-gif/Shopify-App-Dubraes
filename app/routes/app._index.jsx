@@ -4,7 +4,7 @@ export default function Index() {
       {/* ===================== */}
       {/* MAIN SECTION */}
       {/* ===================== */}
-      <s-section heading="Overview">
+      <s-section heading="Overviews">
         <div style={{ display: "grid", gap: "12px" }}>
           <p>
             Welcome to your Dubraes Configurator app. Manage custom orders,

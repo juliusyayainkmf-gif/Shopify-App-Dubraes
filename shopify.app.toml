@@ -2,31 +2,28 @@
 
 client_id = "a62ee2cf7a5148c1039214444d7f0ccd"
 name = "Inventory Dashboard"
-application_url = "https://inventory.dubraes.com"
+application_url = "https://shopify-app-dubraes.onrender.com/"
 embedded = true
-
-[build]
-automatically_update_urls_on_dev = true
 
 [webhooks]
 api_version = "2026-01"
 
   [[webhooks.subscriptions]]
   topics = [ "app/uninstalled" ]
-  uri = "/webhooks/app/uninstalled"
+  uri = "https://shopify-app-dubraes.onrender.com/webhooks/app/uninstalled"
 
   [[webhooks.subscriptions]]
   topics = [ "app/scopes_update" ]
-  uri = "/webhooks/app/scopes_update"
+  uri = "https://shopify-app-dubraes.onrender.com/webhooks/app/scopes_update"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_products,write_products,read_metaobjects,write_metaobjects,write_metaobject_definitions,read_files,write_files"
+scopes = "read_files,write_files,write_metaobject_definitions,read_metaobjects,write_metaobjects,read_products,write_products"
 optional_scopes = [ ]
 use_legacy_install_flow = false
 
 [auth]
-redirect_urls = [ "https://inventory.dubraes.com/auth/callback" ]
+redirect_urls = [ "https://shopify-app-dubraes.onrender.com/auth/callback" ]
 
 [product.metafields.app.demo_info]
 type = "single_line_text_field"
@@ -51,3 +48,6 @@ required = true
 [metaobjects.app.example.fields.description]
 name = "Description"
 type = "multi_line_text_field"
+
+[build]
+automatically_update_urls_on_dev = true

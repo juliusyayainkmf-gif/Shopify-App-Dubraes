@@ -64,6 +64,24 @@ export async function getConfiguratorData(admin) {
           }
         }
       }
+
+      shoes: metaobjects(type: "configurator_shoes", first: 50) {
+        edges {
+          node {
+            id
+            fields { key value }
+          }
+        }
+      }
+
+      settings: metaobjects(type: "configurator_settings", first: 1) {
+        edges {
+          node {
+            id
+            fields { key value }
+          }
+        }
+      }
     }
   `);
 
@@ -93,9 +111,11 @@ export async function getConfiguratorData(admin) {
 
   return {
     models: json.data.models.edges.map((e) => parseFields(e.node)),
+    shoes: json.data.shoes.edges.map((e) => parseFields(e.node)),
     colors: json.data.colors.edges.map((e) => parseFields(e.node)),
     logoColors: json.data.logoColors.edges.map((e) => parseFields(e.node)),
     logos: json.data.logos.edges.map((e) => parseFields(e.node)),
     fonts: json.data.fonts.edges.map((e) => parseFields(e.node)),
+    settings: json.data.settings.edges.map((e) => parseFields(e.node)),
   };
 }
