@@ -35,7 +35,7 @@ export default function Index() {
         setStats({
           configs: pdfCount,
           logos: imageCount,
-          pending: 12,
+          pending: 0,
         });
 
         setLoading(false);
