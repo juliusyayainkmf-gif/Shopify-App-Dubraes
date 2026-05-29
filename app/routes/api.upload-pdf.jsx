@@ -1,5 +1,4 @@
 /* eslint-env node */
-import { authenticate } from "../shopify.server";
 import { uploadConfiguratorPdf } from "../services/cloudinary.server";
 
 const allowedOrigins = [
@@ -19,6 +18,9 @@ const getCorsHeaders = (request) => {
   };
 };
 
+const isAllowedOrigin = (request) =>
+  allowedOrigins.includes(request.headers.get("origin"));
+
 export const loader = async ({ request }) => {
   return new Response(null, {
     headers: getCorsHeaders(request),
@@ -35,7 +37,12 @@ export const action = async ({ request }) => {
     });
   }
 
-  await authenticate.admin(request);
+  if (!isAllowedOrigin(request)) {
+    return new Response(JSON.stringify({ error: "Forbidden origin" }), {
+      status: 403,
+      headers: corsHeaders,
+    });
+  }
 
   try {
     const formData = await request.formData();
