@@ -1,5 +1,12 @@
-import { v2 as cloudinary } from "cloudinary";
 import { getCorsHeaders } from "../utils/cors.server";
+import { authenticate } from "../shopify.server";
+import { deleteCloudinaryResource } from "../services/cloudinary.server";
+
+const allowedPrefixes = ["configs/", "configs/images/"];
+
+const isAllowedPublicId = (publicId) =>
+  typeof publicId === "string" &&
+  allowedPrefixes.some((prefix) => publicId.startsWith(prefix));
 
 export const loader = async ({ request }) => {
   return new Response(null, {
@@ -9,6 +16,15 @@ export const loader = async ({ request }) => {
 
 export const action = async ({ request }) => {
   const corsHeaders = getCorsHeaders(request);
+
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders,
+    });
+  }
+
+  await authenticate.admin(request);
 
   try {
     const body = await request.json();
@@ -21,9 +37,14 @@ export const action = async ({ request }) => {
       });
     }
 
-    const result = await cloudinary.uploader.destroy(public_id, {
-      resource_type: "image",
-    });
+    if (!isAllowedPublicId(public_id)) {
+      return new Response(JSON.stringify({ error: "Invalid public_id" }), {
+        status: 400,
+        headers: corsHeaders,
+      });
+    }
+
+    const result = await deleteCloudinaryResource(public_id);
 
     if (result.result !== "ok" && result.result !== "not found") {
       return new Response(

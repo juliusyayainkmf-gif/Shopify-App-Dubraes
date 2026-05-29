@@ -338,7 +338,7 @@ export default function ConfiguratorAdmin() {
                 >
                   <strong>{item.name}</strong>
 
-                  <a href={item.model_link} target="_blank">
+                  <a href={item.model_link} target="_blank" rel="noreferrer">
                     {item.model_link}
                   </a>
 
@@ -404,7 +404,7 @@ export default function ConfiguratorAdmin() {
                 >
                   <strong>{item.name}</strong>
 
-                  <a href={item.logo_file} target="_blank">
+                  <a href={item.logo_file} target="_blank" rel="noreferrer">
                     {item.logo_file}
                   </a>
 

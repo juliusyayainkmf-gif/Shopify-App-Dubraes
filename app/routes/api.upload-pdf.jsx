@@ -1,11 +1,6 @@
-import { v2 as cloudinary } from "cloudinary";
-import streamifier from "streamifier";
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+/* eslint-env node */
+import { authenticate } from "../shopify.server";
+import { uploadConfiguratorPdf } from "../services/cloudinary.server";
 
 const allowedOrigins = [
   "https://dubraes-inventory-dashboard.myshopify.com",
@@ -24,27 +19,6 @@ const getCorsHeaders = (request) => {
   };
 };
 
-const uploadFromBuffer = (buffer, configId) => {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      {
-        resource_type: "image",
-        folder: "configs",
-        public_id: configId,
-        type: "upload",
-        access_mode: "public",
-        format: "pdf",
-      },
-      (error, result) => {
-        if (result) resolve(result);
-        else reject(error);
-      }
-    );
-
-    streamifier.createReadStream(buffer).pipe(stream);
-  });
-};
-
 export const loader = async ({ request }) => {
   return new Response(null, {
     headers: getCorsHeaders(request),
@@ -53,6 +27,15 @@ export const loader = async ({ request }) => {
 
 export const action = async ({ request }) => {
   const corsHeaders = getCorsHeaders(request);
+
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders,
+    });
+  }
+
+  await authenticate.admin(request);
 
   try {
     const formData = await request.formData();
@@ -98,7 +81,7 @@ export const action = async ({ request }) => {
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    const result = await uploadFromBuffer(buffer, safeConfigId);
+    const result = await uploadConfiguratorPdf(buffer, safeConfigId);
 
     return new Response(JSON.stringify({ url: result.secure_url }), {
       headers: {

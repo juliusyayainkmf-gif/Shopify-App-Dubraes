@@ -1,18 +1,12 @@
-import { v2 as cloudinary } from "cloudinary";
+/* eslint-env node */
+import { authenticate } from "../shopify.server";
+import { listCloudinaryResources } from "../services/cloudinary.server";
 
-export const action = async () => {
+export const action = async ({ request }) => {
+  await authenticate.admin(request);
+
   try {
-    cloudinary.config({
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-      api_key: process.env.CLOUDINARY_API_KEY,
-      api_secret: process.env.CLOUDINARY_API_SECRET,
-    });
-
-    const result = await cloudinary.api.resources({
-      max_results: 1000,
-    });
-
-    console.log("CLOUDINARY RAW:", result);
+    const result = await listCloudinaryResources();
 
     return new Response(JSON.stringify({
       success: true,

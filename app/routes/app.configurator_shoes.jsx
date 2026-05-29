@@ -25,21 +25,30 @@ export const action = async ({ request }) => {
     const selected = data.shoes.find((s) => s.name === currentShoe);
     const shoesLink = selected?.shoes_link || "";
 
-    return await admin.graphql(`
-      mutation {
+    return await admin.graphql(
+      `
+      mutation UpdateConfiguratorSettings($settingsId: ID!, $currentShoe: String!, $shoesLink: String!) {
         metaobjectUpdate(
-          id: "${settingsId}",
+          id: $settingsId,
           metaobject: {
             fields: [
-              { key: "current_shoe", value: "${currentShoe}" },
-              { key: "current_shoe_link", value: "${shoesLink}" }
+              { key: "current_shoe", value: $currentShoe },
+              { key: "current_shoe_link", value: $shoesLink }
             ]
           }
         ) {
           metaobject { id }
         }
       }
-    `);
+    `,
+      {
+        variables: {
+          settingsId,
+          currentShoe,
+          shoesLink,
+        },
+      },
+    );
   }
 
   return null;
