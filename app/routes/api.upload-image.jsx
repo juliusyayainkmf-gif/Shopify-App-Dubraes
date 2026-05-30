@@ -1,5 +1,9 @@
 /* eslint-env node */
 import { uploadConfiguratorImage } from "../services/cloudinary.server";
+import {
+  checkRateLimit,
+  getRateLimitHeaders,
+} from "../utils/rate-limit.server";
 
 const allowedOrigins = [
   "https://dubraes-inventory-dashboard.myshopify.com",
@@ -20,6 +24,11 @@ const getCorsHeaders = (request) => {
 
 const isAllowedOrigin = (request) =>
   allowedOrigins.includes(request.headers.get("origin"));
+
+const uploadRateLimit = {
+  maxRequests: 100,
+  windowMs: 60 * 1000,
+};
 
 export const loader = async ({ request }) => {
   if (request.method === "OPTIONS") {
@@ -48,6 +57,17 @@ export const action = async ({ request }) => {
     return new Response(JSON.stringify({ error: "Forbidden origin" }), {
       status: 403,
       headers: corsHeaders,
+    });
+  }
+
+  const rateLimit = checkRateLimit(request, uploadRateLimit);
+  if (!rateLimit.allowed) {
+    return new Response(JSON.stringify({ error: "Too many uploads" }), {
+      status: 429,
+      headers: {
+        ...corsHeaders,
+        ...getRateLimitHeaders(rateLimit),
+      },
     });
   }
 
