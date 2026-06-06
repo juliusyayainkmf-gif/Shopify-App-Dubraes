@@ -1,6 +1,7 @@
 const allowedOrigins = [
   "https://dubraes-inventory-dashboard.myshopify.com",
   "https://www.dubraes.com",
+  "https://dubraes.com",
 ];
 
 export function getCorsHeaders(request) {
@@ -13,4 +14,8 @@ export function getCorsHeaders(request) {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };
+}
+
+export function isAllowedOrigin(request) {
+  return allowedOrigins.includes(request.headers.get("origin"));
 }

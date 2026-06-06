@@ -1,0 +1,71 @@
+.dubraes-contact-form {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.dubraes-contact-form__heading {
+  margin: 0 0 12px;
+}
+
+.dubraes-contact-form__text {
+  margin-bottom: 20px;
+}
+
+.dubraes-contact-form__form {
+  display: grid;
+  gap: 16px;
+}
+
+.dubraes-contact-form__field {
+  display: grid;
+  gap: 6px;
+}
+
+.dubraes-contact-form__field label {
+  font-weight: 600;
+}
+
+.dubraes-contact-form__field input,
+.dubraes-contact-form__field textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  font: inherit;
+}
+
+.dubraes-contact-form__field small {
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.dubraes-contact-form__honeypot {
+  position: absolute;
+  left: -10000px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.dubraes-contact-form__button {
+  width: fit-content;
+  padding: 12px 22px;
+  border: 0;
+  border-radius: 4px;
+  background: #111;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+}
+
+.dubraes-contact-form__button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.dubraes-contact-form__status[data-state="success"] {
+  color: #176b35;
+}
+
+.dubraes-contact-form__status[data-state="error"] {
+  color: #b42318;
+}

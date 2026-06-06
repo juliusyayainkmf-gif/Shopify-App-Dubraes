@@ -1,0 +1,89 @@
+{{ 'dubraes-contact-form.css' | asset_url | stylesheet_tag }}
+
+<div
+  class="dubraes-contact-form"
+  data-dubraes-contact-form
+  data-api-url="{{ block.settings.api_url | escape }}"
+>
+  {% if block.settings.heading != blank %}
+    <h2 class="dubraes-contact-form__heading">{{ block.settings.heading }}</h2>
+  {% endif %}
+
+  {% if block.settings.text != blank %}
+    <div class="dubraes-contact-form__text">{{ block.settings.text }}</div>
+  {% endif %}
+
+  <form class="dubraes-contact-form__form" enctype="multipart/form-data">
+    <div class="dubraes-contact-form__field">
+      <label for="DubraesContactName-{{ block.id }}">Name</label>
+      <input id="DubraesContactName-{{ block.id }}" name="name" type="text" autocomplete="name" required>
+    </div>
+
+    <div class="dubraes-contact-form__field">
+      <label for="DubraesContactEmail-{{ block.id }}">Email</label>
+      <input id="DubraesContactEmail-{{ block.id }}" name="email" type="email" autocomplete="email" required>
+    </div>
+
+    <div class="dubraes-contact-form__field">
+      <label for="DubraesContactSubject-{{ block.id }}">Subject</label>
+      <input id="DubraesContactSubject-{{ block.id }}" name="subject" type="text">
+    </div>
+
+    <div class="dubraes-contact-form__field">
+      <label for="DubraesContactMessage-{{ block.id }}">Message</label>
+      <textarea id="DubraesContactMessage-{{ block.id }}" name="message" rows="5" required></textarea>
+    </div>
+
+    <div class="dubraes-contact-form__field">
+      <label for="DubraesContactImage-{{ block.id }}">Attach image</label>
+      <input id="DubraesContactImage-{{ block.id }}" name="image" type="file" accept="image/jpeg,image/png,image/webp">
+      <small>JPG, PNG, or WEBP. Max 5MB.</small>
+    </div>
+
+    <div class="dubraes-contact-form__honeypot" aria-hidden="true">
+      <label for="DubraesContactWebsite-{{ block.id }}">Website</label>
+      <input id="DubraesContactWebsite-{{ block.id }}" name="website" type="text" tabindex="-1" autocomplete="off">
+    </div>
+
+    <button class="dubraes-contact-form__button" type="submit">
+      {{ block.settings.button_label }}
+    </button>
+
+    <div class="dubraes-contact-form__status" data-dubraes-contact-status role="status" aria-live="polite"></div>
+  </form>
+</div>
+
+<script src="{{ 'dubraes-contact-form.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "Contact form with image",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Contact us"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Text",
+      "default": "<p>Send us a message and attach an image if needed.</p>"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label",
+      "default": "Send message"
+    },
+    {
+      "type": "url",
+      "id": "api_url",
+      "label": "API URL",
+      "default": "https://shopify-app-dubraes.onrender.com/api/contact"
+    }
+  ]
+}
+{% endschema %}
