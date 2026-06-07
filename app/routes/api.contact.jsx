@@ -159,6 +159,19 @@ export const action = async ({ request }) => {
   } catch (error) {
     console.error("CONTACT FORM ERROR:", error);
 
+    if (error.code === "EMAIL_SETUP_ERROR") {
+      return json(
+        {
+          error:
+            "Email sending is not configured correctly yet. Please check RESEND_API_KEY and CONTACT_EMAIL_FROM.",
+        },
+        {
+          status: 500,
+          headers: corsHeaders,
+        },
+      );
+    }
+
     return json(
       { error: "Unable to send message right now." },
       {

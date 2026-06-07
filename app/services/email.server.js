@@ -1,5 +1,13 @@
 const RESEND_EMAILS_ENDPOINT = "https://api.resend.com/emails";
 
+class EmailSetupError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "EmailSetupError";
+    this.code = "EMAIL_SETUP_ERROR";
+  }
+}
+
 export async function sendContactEmail({
   fromEmail,
   name,
@@ -8,13 +16,12 @@ export async function sendContactEmail({
   attachment,
 }) {
   if (!process.env.RESEND_API_KEY) {
-    throw new Error("Missing RESEND_API_KEY");
+    throw new EmailSetupError("Missing RESEND_API_KEY");
   }
 
   const to = "princeyayain123@gmail.com";
   const from =
-    process.env.CONTACT_EMAIL_FROM ||
-    "Dubraes Design Requests <no-reply@dubraes.com>";
+    process.env.CONTACT_EMAIL_FROM || "Dubraes Design Requests <onboarding@resend.dev>";
   const replyTo = fromEmail;
   const safeSubject = subject?.trim() || "New Dubraes custom design request";
 
@@ -42,7 +49,9 @@ export async function sendContactEmail({
 
   if (!response.ok) {
     const errorBody = await response.text();
-    throw new Error(`Email provider error: ${response.status} ${errorBody}`);
+    throw new EmailSetupError(
+      `Email provider error: ${response.status} ${errorBody}`,
+    );
   }
 
   return response.json();
