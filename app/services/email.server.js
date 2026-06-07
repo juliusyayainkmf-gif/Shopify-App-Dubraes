@@ -20,7 +20,7 @@ export async function sendContactEmail({
     throw new EmailSetupError("Missing RESEND_API_KEY");
   }
 
-  const to = "julius.yayain.kmf@gmail.com";
+  const to = "sales@keepmefreshusa.com";
   const from = "Dubraes Design Requests <onboarding@resend.dev>";
   const replyTo = fromEmail;
   const safeSubject = subject?.trim() || "New Dubraes custom design request";
