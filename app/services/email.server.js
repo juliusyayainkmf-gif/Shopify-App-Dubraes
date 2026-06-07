@@ -19,7 +19,7 @@ export async function sendContactEmail({
     throw new EmailSetupError("Missing RESEND_API_KEY");
   }
 
-  const to = "princeyayain123@gmail.com";
+  const to = "julius.yayain.kmf@gmail.com";
   const from =
     process.env.CONTACT_EMAIL_FROM || "Dubraes Design Requests <onboarding@resend.dev>";
   const replyTo = fromEmail;
