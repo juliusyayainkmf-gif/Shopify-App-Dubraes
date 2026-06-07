@@ -162,8 +162,7 @@ export const action = async ({ request }) => {
     if (error.code === "EMAIL_SETUP_ERROR") {
       return json(
         {
-          error:
-            "Email sending is not configured correctly yet. Please check RESEND_API_KEY and CONTACT_EMAIL_FROM.",
+          error: error.publicMessage,
         },
         {
           status: 500,

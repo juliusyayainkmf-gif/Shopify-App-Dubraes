@@ -1,10 +1,11 @@
 const RESEND_EMAILS_ENDPOINT = "https://api.resend.com/emails";
 
 class EmailSetupError extends Error {
-  constructor(message) {
+  constructor(message, publicMessage = message) {
     super(message);
     this.name = "EmailSetupError";
     this.code = "EMAIL_SETUP_ERROR";
+    this.publicMessage = publicMessage;
   }
 }
 
@@ -20,8 +21,7 @@ export async function sendContactEmail({
   }
 
   const to = "julius.yayain.kmf@gmail.com";
-  const from =
-    process.env.CONTACT_EMAIL_FROM || "Dubraes Design Requests <onboarding@resend.dev>";
+  const from = "Dubraes Design Requests <onboarding@resend.dev>";
   const replyTo = fromEmail;
   const safeSubject = subject?.trim() || "New Dubraes custom design request";
 
@@ -30,6 +30,7 @@ export async function sendContactEmail({
     headers: {
       Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
       "Content-Type": "application/json",
+      "User-Agent": "Dubraes Shopify App",
     },
     body: JSON.stringify({
       from,
@@ -51,6 +52,7 @@ export async function sendContactEmail({
     const errorBody = await response.text();
     throw new EmailSetupError(
       `Email provider error: ${response.status} ${errorBody}`,
+      `Email provider error: ${response.status}. ${errorBody}`,
     );
   }
 
