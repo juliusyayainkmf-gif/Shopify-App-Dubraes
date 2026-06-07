@@ -11,10 +11,12 @@ export async function sendContactEmail({
     throw new Error("Missing RESEND_API_KEY");
   }
 
-  const to = process.env.CONTACT_EMAIL_TO || "sales@dubraes.com";
-  const from = process.env.CONTACT_EMAIL_FROM || "Dubraes Contact <no-reply@dubraes.com>";
+  const to = "princeyayain123@gmail.com";
+  const from =
+    process.env.CONTACT_EMAIL_FROM ||
+    "Dubraes Design Requests <no-reply@dubraes.com>";
   const replyTo = fromEmail;
-  const safeSubject = subject?.trim() || "New Dubraes contact form submission";
+  const safeSubject = subject?.trim() || "New Dubraes custom design request";
 
   const response = await fetch(RESEND_EMAILS_ENDPOINT, {
     method: "POST",

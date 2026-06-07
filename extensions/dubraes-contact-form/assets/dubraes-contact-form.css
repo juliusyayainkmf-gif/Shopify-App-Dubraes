@@ -1,19 +1,114 @@
 .dubraes-contact-form {
-  max-width: 720px;
-  margin: 0 auto;
+  --dubraes-ink: #171512;
+  --dubraes-muted: #6e6860;
+  --dubraes-border: #ded9d1;
+  --dubraes-cream: #f5f1e9;
+  max-width: 1200px;
+  margin: 48px auto;
+  padding: 0 20px;
+  color: var(--dubraes-ink);
+}
+
+.dubraes-contact-form__intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+  overflow: hidden;
+  border-radius: 20px 20px 0 0;
+  background: var(--dubraes-cream);
+}
+
+.dubraes-contact-form__visual {
+  min-height: 420px;
+}
+
+.dubraes-contact-form__visual img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dubraes-contact-form__intro-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(32px, 6vw, 72px);
+}
+
+.dubraes-contact-form__eyebrow {
+  margin: 0 0 12px;
+  color: #8f2f2b;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .dubraes-contact-form__heading {
-  margin: 0 0 12px;
+  max-width: 560px;
+  margin: 0 0 18px;
+  font-size: clamp(32px, 5vw, 58px);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
 }
 
 .dubraes-contact-form__text {
-  margin-bottom: 20px;
+  max-width: 560px;
+  color: var(--dubraes-muted);
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.dubraes-contact-form__steps {
+  display: grid;
+  gap: 12px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.dubraes-contact-form__steps li {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.dubraes-contact-form__steps span {
+  color: #8f2f2b;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+}
+
+.dubraes-contact-form__panel {
+  padding: clamp(28px, 5vw, 64px);
+  border: 1px solid var(--dubraes-border);
+  border-top: 0;
+  border-radius: 0 0 20px 20px;
+  background: #fff;
+  box-shadow: 0 24px 60px rgba(41, 35, 27, 0.08);
+}
+
+.dubraes-contact-form__panel-heading {
+  margin-bottom: 28px;
+}
+
+.dubraes-contact-form__panel-heading h3 {
+  margin: 0;
+  font-size: clamp(24px, 3vw, 36px);
+  letter-spacing: -0.025em;
 }
 
 .dubraes-contact-form__form {
   display: grid;
-  gap: 16px;
+  gap: 20px;
+}
+
+.dubraes-contact-form__row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
 }
 
 .dubraes-contact-form__field {
@@ -22,20 +117,39 @@
 }
 
 .dubraes-contact-form__field label {
+  font-size: 14px;
   font-weight: 600;
 }
 
 .dubraes-contact-form__field input,
 .dubraes-contact-form__field textarea {
+  box-sizing: border-box;
   width: 100%;
-  padding: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--dubraes-border);
+  border-radius: 9px;
+  background: #fff;
+  color: var(--dubraes-ink);
   font: inherit;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.dubraes-contact-form__field input:focus,
+.dubraes-contact-form__field textarea:focus {
+  border-color: #8f2f2b;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(143, 47, 43, 0.12);
+}
+
+.dubraes-contact-form__upload {
+  padding: 18px;
+  border: 1px dashed #c8bfb2;
+  border-radius: 12px;
+  background: #faf8f4;
 }
 
 .dubraes-contact-form__field small {
-  color: rgba(0, 0, 0, 0.65);
+  color: var(--dubraes-muted);
 }
 
 .dubraes-contact-form__honeypot {
@@ -47,14 +161,20 @@
 
 .dubraes-contact-form__button {
   width: fit-content;
-  padding: 12px 22px;
+  padding: 14px 24px;
   border: 0;
-  border-radius: 4px;
-  background: #111;
+  border-radius: 999px;
+  background: var(--dubraes-ink);
   color: #fff;
   cursor: pointer;
   font: inherit;
   font-weight: 600;
+  transition: transform 150ms ease, background 150ms ease;
+}
+
+.dubraes-contact-form__button:hover {
+  transform: translateY(-1px);
+  background: #8f2f2b;
 }
 
 .dubraes-contact-form__button:disabled {
@@ -68,4 +188,42 @@
 
 .dubraes-contact-form__status[data-state="error"] {
   color: #b42318;
+}
+
+.dubraes-contact-form__actions {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+
+.dubraes-contact-form__actions p {
+  margin: 0;
+  color: var(--dubraes-muted);
+  font-size: 13px;
+}
+
+@media screen and (max-width: 850px) {
+  .dubraes-contact-form__intro {
+    grid-template-columns: 1fr;
+  }
+
+  .dubraes-contact-form__visual {
+    min-height: 300px;
+    max-height: 460px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .dubraes-contact-form {
+    margin: 24px auto;
+    padding: 0 12px;
+  }
+
+  .dubraes-contact-form__row {
+    grid-template-columns: 1fr;
+  }
+
+  .dubraes-contact-form__actions {
+    display: grid;
+  }
 }
