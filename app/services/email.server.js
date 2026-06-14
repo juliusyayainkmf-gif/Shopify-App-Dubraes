@@ -35,7 +35,7 @@ export async function sendContactEmail({
 
   const mailOptions = {
     from: `"Dubraes Custom Design Form" <${process.env.GMAIL_USER}>`,
-    to: "julius.yayain.kmf@gmail.com",
+    to: "sales@keepmefreshusa.com",
     replyTo: fromEmail,
     subject: `[Dubraes] ${safeSubject}`,
 
