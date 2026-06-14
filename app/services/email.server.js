@@ -1,4 +1,4 @@
-const RESEND_EMAILS_ENDPOINT = "https://api.resend.com/emails";
+import nodemailer from "nodemailer";
 
 class EmailSetupError extends Error {
   constructor(message, publicMessage = message) {
@@ -16,45 +16,53 @@ export async function sendContactEmail({
   message,
   attachment,
 }) {
-  if (!process.env.RESEND_API_KEY) {
-    throw new EmailSetupError("Missing RESEND_API_KEY");
-  }
-
-  const to = "sales@keepmefreshusa.com";
-  const from = "Dubraes Design Requests <onboarding@resend.dev>";
-  const replyTo = fromEmail;
-  const safeSubject = subject?.trim() || "New Dubraes custom design request";
-
-  const response = await fetch(RESEND_EMAILS_ENDPOINT, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-      "User-Agent": "Dubraes Shopify App",
-    },
-    body: JSON.stringify({
-      from,
-      to,
-      reply_to: replyTo,
-      subject: safeSubject,
-      text: [
-        `Name: ${name}`,
-        `Email: ${fromEmail}`,
-        `Subject: ${safeSubject}`,
-        "",
-        message,
-      ].join("\n"),
-      attachments: attachment ? [attachment] : undefined,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorBody = await response.text();
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
     throw new EmailSetupError(
-      `Email provider error: ${response.status} ${errorBody}`,
-      `Email provider error: ${response.status}. ${errorBody}`,
+      "Missing GMAIL_USER or GMAIL_APP_PASSWORD"
     );
   }
 
-  return response.json();
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD,
+    },
+  });
+
+  const safeSubject =
+    subject?.trim() || "New Dubraes custom design request";
+
+  const mailOptions = {
+    from: `"Dubraes Design Requests" <${process.env.GMAIL_USER}>`,
+    to: "julius.yayain.kmf@gmail.com",
+    replyTo: fromEmail,
+    subject: safeSubject,
+    text: `
+Name: ${name}
+Email: ${fromEmail}
+Subject: ${safeSubject}
+
+${message}
+    `.trim(),
+  };
+
+  if (attachment) {
+    mailOptions.attachments = [
+      {
+        filename: attachment.filename,
+        content: Buffer.from(attachment.content, "base64"),
+      },
+    ];
+  }
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    return info;
+  } catch (error) {
+    throw new EmailSetupError(
+      `Email provider error: ${error.message}`,
+      `Email provider error: ${error.message}`
+    );
+  }
 }
