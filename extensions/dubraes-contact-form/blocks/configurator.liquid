@@ -21,7 +21,9 @@
 
 <section class="model-viewer-section">
   <canvas id="dubrae-config"></canvas>
-  <a class="navbar-brand nav-logo configurator-logo" href="{{ routes.root_url }}">Dubraes</a>
+  <a class="navbar-brand nav-logo configurator-logo" href="{{ routes.root_url }}">
+    {{ block.settings.title | default: 'Dubraes' | escape }}
+  </a>
   <div class="icon-container d-flex gap-3">
     <div class="d-flex flex-row gap-4">
       <div class="tooltip-container">
@@ -524,6 +526,12 @@
   "name": "Dubraes Configurator",
   "target": "section",
   "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Dubraes"
+    },
     {
       "type": "text",
       "id": "variant_id",
