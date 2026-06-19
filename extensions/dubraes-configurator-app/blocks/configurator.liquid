@@ -1,0 +1,539 @@
+{{ 'style.css' | asset_url | stylesheet_tag }}
+{% assign models = shop.metaobjects.configurator_model.values %}
+{% assign colors = shop.metaobjects.configurator_color.values %}
+{% assign fonts = shop.metaobjects.configurator_font.values %}
+{% assign colorss = shop.metaobjects.configurator_color_logo.values %}
+{% assign settings = shop.metaobjects.configurator_settings.values | first %}
+
+<div id="loader" class="d-flex flex-column gap-3">
+  <svg class="spinner" viewBox="0 0 50 50">
+    <circle
+      class="path"
+      cx="25"
+      cy="25"
+      r="20"
+      fill="none"
+      stroke-width="4"
+    />
+  </svg>
+  <p>Loading...</p>
+</div>
+
+<section class="model-viewer-section">
+  <canvas id="dubrae-config"></canvas>
+  <a class="navbar-brand nav-logo configurator-logo" href="{{ routes.root_url }}">Dubraes</a>
+  <div class="icon-container d-flex gap-3">
+    <div class="d-flex flex-row gap-4">
+      <div class="tooltip-container">
+        <button id="position-btn" type="button">
+          <img
+            src="{{ 'shoes.svg' | asset_url }}"
+            alt="Preview Your Shoes Button"
+            class="preview-image"
+            width=""
+            height=""
+          >
+        </button>
+
+        <div class="tooltip-text">Preview Your Dubraes on Shoes</div>
+      </div>
+      <div class="tooltip-container">
+        <button id="helpBtn" type="button">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            fill="currentColor"
+            class="bi bi-question-circle"
+            viewBox="0 0 16 16"
+          >
+            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+            <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286m1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94"/>
+          </svg>
+        </button>
+
+        <div class="tooltip-text">Help Button</div>
+      </div>
+
+      <div class="tooltip-container">
+        <button id="pdfBtn">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            fill="currentColor"
+            class="bi bi-filetype-pdf"
+            viewBox="0 0 16 16"
+          >
+            <path fill-rule="evenodd"
+                d="M14 4.5V14a2 2 0 0 1-2 2h-1v-1h1a1 1 0 0 0 1-1V4.5h-2A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v9H2V2a2 2 0 0 1 2-2h5.5zM1.6 11.85H0v3.999h.791v-1.342h.803q.43 0 .732-.173.305-.175.463-.474a1.4 1.4 0 0 0 .161-.677q0-.375-.158-.677a1.2 1.2 0 0 0-.46-.477q-.3-.18-.732-.179m.545 1.333a.8.8 0 0 1-.085.38.57.57 0 0 1-.238.241.8.8 0 0 1-.375.082H.788V12.48h.66q.327 0 .512.181.185.183.185.522m1.217-1.333v3.999h1.46q.602 0 .998-.237a1.45 1.45 0 0 0 .595-.689q.196-.45.196-1.084 0-.63-.196-1.075a1.43 1.43 0 0 0-.589-.68q-.396-.234-1.005-.234zm.791.645h.563q.371 0 .609.152a.9.9 0 0 1 .354.454q.118.302.118.753a2.3 2.3 0 0 1-.068.592 1.1 1.1 0 0 1-.196.422.8.8 0 0 1-.334.252 1.3 1.3 0 0 1-.483.082h-.563zm3.743 1.763v1.591h-.79V11.85h2.548v.653H7.896v1.117h1.606v.638z" />
+          </svg>
+        </button>
+
+        <div class="tooltip-text">Download in PDF form</div>
+      </div>
+    </div>
+
+    <div id="helpModal" class="help-modal">
+      <div class="help-modal-overlay"></div>
+
+      <div class="help-modal-content">
+        <button id="closeHelpModal" type="button" class="help-modal-close">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            fill="currentColor"
+            class="bi bi-x-circle"
+            viewBox="0 0 16 16"
+          >
+            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+            <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+          </svg>
+        </button>
+
+        <div class="help-modal-left">
+          <img
+            src="https://cdn.shopify.com/s/files/1/0135/5966/0608/files/neon_drip.jpg?v=1613792737"
+            alt="Customer support"
+            width=""
+            height=""
+          >
+        </div>
+
+        <div class="help-modal-right">
+          {%- form 'contact', id: 'ContactForm' -%}
+            {%- if form.posted_successfully? -%}
+              <p class="form-success">Thanks! We'll get back to you soon.</p>
+            {%- endif -%}
+
+            {%- if form.errors -%}
+              <p class="form-error">{{ form.errors | default_errors }}</p>
+            {%- endif -%}
+
+            <h2 class="send-message mb-4">Design not fitting?</h2>
+            <p>We’re here to help. Fill out the form below and our team will get back to you shortly.</p>
+
+            <div class="d-flex flex-row gap-4 mb-4">
+              <input type="text" class="form-control" name="contact[name]" placeholder="Enter your full name">
+              <input type="email" class="form-control" name="contact[email]" placeholder="Enter your email" required>
+            </div>
+
+            <div class="mb-4">
+              <input type="tel" class="form-control" name="contact[phone]" placeholder="Enter your phone number">
+            </div>
+
+            <div class="mb-4">
+              <textarea class="form-control" rows="3" name="contact[body]" placeholder="Enter your message"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-custom rounded bg-dark text-white form-button py-3 mt-3">
+              Send Message
+            </button>
+          {%- endform -%}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="options-tab active">
+    <div class="container p-0 h-100">
+      <div class="d-flex h-100 gap-4 flex-column justify-content-between">
+        <div class="accordion w-100" id="productOptionsAccordion">
+          <div id="dubraesOnly">
+            <div class="accordion-item custom-shadow  mb-3">
+              <h2 class="accordion-header" id="headingModel">
+                <button
+                  class="accordion-button py-4 px-4"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#collapseModel"
+                  aria-expanded="true"
+                  aria-controls="collapseModel"
+                >
+                  <h4 class="mb-0">Select Your Model</h4>
+                </button>
+              </h2>
+              <div id="collapseModel" class="accordion-collapse collapse show" aria-labelledby="headingModel">
+                <div class="accordion-body px-4 pb-4 gap-4 d-flex flex-column justify-content-center">
+                  <div class="color-options d-flex gap-1 flex-row-reverse justify-content-end">
+                    {% for model in models %}
+                      <button
+                        class="model-btn btn btn-outline-dark option-btn {% if forloop.index0 == 1 %}active{% endif %}"
+                        data-model="{{  model.name | downcase }}"
+                      >
+                        {{ model.name }} Dubraes
+                      </button>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item custom-shadow  mb-3">
+              <h2 class="accordion-header" id="headingColors">
+                <button
+                  class="accordion-button collapsed py-4 px-4"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#collapseColors"
+                  aria-expanded="false"
+                  aria-controls="collapseColors"
+                >
+                  <h4 class="mb-0">Choose Your Color</h4>
+                </button>
+              </h2>
+              <div
+                id="collapseColors"
+                class="accordion-collapse collapse"
+                aria-labelledby="headingColors"
+              >
+                <div class="accordion-body px-4 pb-4 gap-4 d-flex flex-column justify-content-center">
+                  <div class="color-options">
+                    <button class="main-color btn btn-outline-dark option-btn btn-active">Main Color</button>
+                    {% comment %} <button class="split-color btn btn-outline-dark option-btn">Split Color</button> {% endcomment %}
+                  </div>
+                  <div class="color-container">
+                    {% for color in colors %}
+                      <button
+                        class="rounded-3 color-btn"
+                        data-color="{{ color.hex | escape }}"
+                        style="background: {{ color.hex | escape }};"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="bottom"
+                        title="{{ color.name | escape }}"
+                        data-title="{{ color.name | escape }}"
+                      ></button>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item custom-shadow  mb-3">
+              <h2 class="accordion-header" id="headingLogos">
+                <button
+                  class="accordion-button collapsed py-4 px-4"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#collapseLogos"
+                  aria-expanded="false"
+                  aria-controls="collapseLogos"
+                >
+                  <h4 class="mb-0">Add Your Logo</h4>
+                </button>
+              </h2>
+              <div
+                id="collapseLogos"
+                class="accordion-collapse collapse"
+                aria-labelledby="headingLogos"
+              >
+                <div class="accordion-body px-4 pb-4 d-flex flex-column gap-4">
+                  <div>
+                    <button
+                      class="btn btn-outline-dark option-btn logo-btn active"
+                      data-logo="none"
+                      id="noneLogo"
+                    >
+                      Remove Logo
+                    </button>
+                  </div>
+                  <div class="color-container logo-colorss">
+                    {% for colorLogo in colorss %}
+                      <button
+                        class="rounded-3 logo-color-btn"
+                        data-color="{{ colorLogo.hex_color | escape }}"
+                        style="background: {{ colorLogo.hex_color | escape }};"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="bottom"
+                        title="{{ colorLogo.name | escape }}"
+                        data-title="{{ colorLogo.name | escape }}"
+                      ></button>
+                    {% endfor %}
+                  </div>
+                  <div
+                    id="collapseLogo"
+                    class=""
+                    aria-labelledby="custom-Logo"
+                  >
+                    <div
+                      class="accordion-body px-0 pb-4 gap-4 d-flex flex-column justify-content-center"
+                    >
+                      <div id="drop-zone">
+                        Drag logo here or click<br>
+                        <small>(PNG, JPG, JPEG, SVG only)</small><br>
+                        <small>(Note: Background must be transparent)</small>
+                        <input type="file" id="fileInput" accept="image/*" hidden>
+                      </div>
+                    </div>
+                    <p class="m-0">Slide To Adjust Logo Size</p>
+                    <div class="px-0 pb-4 w-100">
+                      <input
+                        type="range"
+                        class="w-100"
+                        id="logoSizeSlider"
+                        min="0.6"
+                        max="1"
+                        step="0.05"
+                        value="1"
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item custom-shadow  mb-3">
+              <h2 class="accordion-header" id="headingPersonalization">
+                <button
+                  class="accordion-button collapsed py-4 px-4"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#collapsePersonalization"
+                  aria-expanded="false"
+                  aria-controls="collapsePersonalization"
+                >
+                  <h4 class="mb-0">Personalization Text</h4>
+                </button>
+              </h2>
+              <div
+                id="collapsePersonalization"
+                class="accordion-collapse collapse"
+                aria-labelledby="headingPersonalization"
+              >
+                <div class="accordion-body px-4 pb-4 d-flex flex-column gap-4">
+                  <input
+                    type="text"
+                    id="customText"
+                    class="form-control"
+                    aria-describedby="Personalization"
+                    placeholder="Add your text here (ex. John Doe)"
+                    maxlength="8"
+                  >
+
+                  <div class="accordion-item custom-shadow  mb-0">
+                    <h2 class="accordion-header" id="personalization-font-color">
+                      <button
+                        class="accordion-button collapsed py-4 px-4"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseFontColor"
+                        aria-expanded="false"
+                        aria-controls="collapseFontColor"
+                      >
+                        <h4 class="mb-0">Font Color</h4>
+                      </button>
+                    </h2>
+                    <div
+                      id="collapseFontColor"
+                      class="accordion-collapse collapse "
+                      aria-labelledby="personalization-font-color"
+                    >
+                      <div
+                        class="accordion-body px-4 pb-4 gap-4 d-flex flex-column justify-content-center"
+                      >
+                        <div class="color-options  gap-1">
+                          <div class="color-container logo-colorss">
+                            {% for colorLogo in colorss %}
+                              <button
+                                class="rounded-3 color-btn-personalization"
+                                data-color="{{ colorLogo.hex_color | escape }}"
+                                style="background: {{ colorLogo.hex_color | escape }};"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="bottom"
+                                title="{{ colorLogo.name | escape }}"
+                                data-title="{{ colorLogo.name | escape }}"
+                              ></button>
+                            {% endfor %}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="accordion-item custom-shadow  mb-0">
+                    <h2 class="accordion-header" id="personalization-fonts">
+                      <button
+                        class="accordion-button collapsed py-4 px-4"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseFonts"
+                        aria-expanded="false"
+                        aria-controls="collapseFonts"
+                      >
+                        <h4 class="mb-0">Font Style</h4>
+                      </button>
+                    </h2>
+                    <div
+                      id="collapseFonts"
+                      class="accordion-collapse collapse "
+                      aria-labelledby="personalization-fonts"
+                    >
+                      <div
+                        class="accordion-body px-4 pb-4 gap-4 d-flex flex-column justify-content-center"
+                      >
+                        <div class="color-options d-flex gap-1">
+                          {% for font in fonts %}
+                            <button
+                              class="{{ font.name | downcase | escape }} font-btn btn btn-outline-dark {% if forloop.first %}active{% endif %}"
+                              data-font="{{ font.name | downcase | escape }}"
+                            >
+                              {{ font.name | escape }}
+                            </button>
+                          {% endfor %}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="accordion-item custom-shadow  mb-0">
+                    <h2 class="accordion-header" id="personalization-font-size">
+                      <button
+                        class="accordion-button collapsed py-4 px-4"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseFontSize"
+                        aria-expanded="false"
+                        aria-controls="collapseFontSize"
+                      >
+                        <h4 class="mb-0">Font Size</h4>
+                      </button>
+                    </h2>
+                    <div
+                      id="collapseFontSize"
+                      class="accordion-collapse collapse "
+                      aria-labelledby="personalization-font-size"
+                    >
+                      <div
+                        class="accordion-body px-4 pb-4 gap-4 d-flex flex-column justify-content-center"
+                      >
+                        <div class="d-flex flex-column gap-2">
+                          <label for="fontSizeSlider">Slide to Adjust Font Size</label>
+
+                          <input
+                            type="range"
+                            id="fontSizeSlider"
+                            min="0.2"
+                            max="1"
+                            step="0.05"
+                            value="0.5"
+                          >
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion w-100 hidden" id="summaryOptionsAccordion">
+          <button
+            class="btn btn-outline-dark option-btn btn-active w-100 py-3 my-2"
+            id="backButton"
+          >
+            Go Back
+          </button>
+
+          <div class="text-center d-flex flex-column gap-4 py-5 preview-container">
+            <h2 class="preview-title">Preview on different shoe colors</h2>
+            <div class="d-flex justify-content-center gap-3">
+              <button class="shoe-btn white-btn active" id="shoeWhite"><span class="dot white"></span> White</button>
+              <button class="shoe-btn black-btn" id="shoeBlack"><span class="dot black"></span> Black</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="price pb-4">
+          <h3 class="d-flex justify-content-between">
+            <span>Estimated Total: </span
+            ><span
+              id="price-tag"
+              >$5.00</span
+            >
+          </h3>
+          <p class="mb-4">Taxes, discounts and shipping calculated at checkout.</p>
+          <div class="d-flex gap-3">
+            <button
+              class="btn btn-outline-dark option-btn btn-active w-100 py-3"
+              id="summaryBtn"
+            >
+              Summary
+            </button>
+            <button class="btn btn-outline-dark option-btn btn-active w-100 py-3" id="addToCart">Add To Cart</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="d-flex w-100 h-100 position-absolute z-3" id="addToCartStatus">
+    <div class="border rounded addToCartStatus-container bg-white text-center p-5 position-fixed top-50 start-50 translate-middle">
+      <h3 id="cartStatusTitle">Item added to your cart!</h3>
+      <h3 id="cartStatusMessage">You can continue shopping or checkout.</h3>
+    </div>
+  </div>
+
+<div id="summaryModal" class="summary-modal">
+  <div class="summary-overlay"></div>
+
+  <div class="summary-content">
+    <button id="closeSummary" class="summary-close">✕</button>
+
+    <h3 class="mb-4">Order Summary</h3>
+
+    <div id="summaryTable" class="summary-container"></div>
+  </div>
+</div>
+</section>
+
+<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js" defer></script>
+<script src="https://unpkg.com/three@0.146.0/build/three.min.js" defer></script>
+<script src="https://unpkg.com/three@0.146.0/examples/js/loaders/GLTFLoader.js" defer></script>
+<script src="https://unpkg.com/three@0.146.0/examples/js/controls/OrbitControls.js" defer></script>
+<script src="https://unpkg.com/three@0.146.0/examples/js/controls/TrackballControls.js" defer></script>
+<script src="https://unpkg.com/three@0.146.0/examples/js/geometries/DecalGeometry.js" defer></script>
+<script src="https://unpkg.com/three@0.146.0/examples/js/loaders/FontLoader.js" defer></script>
+<script src="https://unpkg.com/three@0.146.0/examples/js/geometries/TextGeometry.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/marchingsquares@1.3.3/dist/marchingsquares.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+
+<script id="configurator-data" type="application/json">
+  {
+    "models": {
+      {% for model in models %}
+        "{{ model.name | downcase }}": "{{ model.model_link }}"{% unless forloop.last %},{% endunless %}
+      {% endfor %},
+      "shoe": "{{ settings.current_shoe_link }}"
+    },
+
+    "fonts": {
+      {% for font in fonts %}
+        "{{ font.name | downcase }}": "{{ font.font_file }}"{% unless forloop.last %},{% endunless %}
+      {% endfor %}
+    }
+  }
+</script>
+
+<script src="{{ 'controller.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'draganddrop.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'script.js' | asset_url }}" defer="defer"></script>
+
+{% schema %}
+{
+  "name": "Dubraes Configurator",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "variant_id",
+      "label": "Variant ID"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Dubraes Configurator"
+    }
+  ]
+}
+{% endschema %}
