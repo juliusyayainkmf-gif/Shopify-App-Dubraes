@@ -6,7 +6,8 @@
     background: var(--gradient-background);
     top: 0;
     left: 0;
-    z-index: 100;
+    z-index: 9999999999999;
+    background: white;
 }
 
 .dubrae-container {
