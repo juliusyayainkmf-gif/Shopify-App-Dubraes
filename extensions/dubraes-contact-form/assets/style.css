@@ -3,7 +3,6 @@
     width: 100%;
     height: 100dvh;
     overflow: hidden;
-    background: var(--gradient-background);
     top: 0;
     left: 0;
     z-index: 9999999999999;
