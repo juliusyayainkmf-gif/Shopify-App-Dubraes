@@ -1,121 +1,124 @@
 .model-viewer-section {
-    position: fixed;
-    width: 100%;
-    height: 100dvh;
-    overflow: hidden;
-    top: 0;
-    left: 0;
-    z-index: 9999999999999;
-    background: white;
+  position: fixed;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  top: 0;
+  left: 0;
+  z-index: 9999999999999;
+  background: white;
 }
 
 .dubrae-container {
-    margin: 0;
-    padding: 0;
-    width: 100vw;
-    overflow: hidden;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: sans-serif;
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: sans-serif;
 }
 
 .options-tab {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 100%;
-    max-width: 500px;
-    height: 100dvh;
-    padding: 30px;
-    padding-bottom: 0;
-    overflow-y: auto;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  max-width: 500px;
+  height: 100dvh;
+  padding: 30px;
+  padding-bottom: 0;
+  overflow-y: auto;
 }
 
 #dubrae-config {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
 }
 
 .icon-container {
-    position: absolute;
-    top: 20px;
-    right: 0px;
-    z-index: 1000;
-    opacity: 0;
+  position: absolute;
+  top: 20px;
+  right: 0px;
+  z-index: 1000;
+  opacity: 0;
 }
 
 .icon-container button {
-    font-size: 0px;
-    background-color: transparent;
-    border: none;
+  font-size: 0px;
+  background-color: transparent;
+  border: none;
 }
 
-.option-btn, .font-btn {
-    padding: 8px 18px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    font-size: 1.5rem;
+.option-btn,
+.font-btn {
+  padding: 8px 18px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  font-size: 1.5rem;
 }
 
 #customText {
-    font-size: 1.5rem;
+  font-size: 1.5rem;
 }
 
 .option-btn.active,
 .option-btn:hover {
-    background: black;
-    color: white;
+  background: black;
+  color: white;
 }
 
 .active {
-    opacity: 1;
-    pointer-events: auto;
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .btn-active {
-    background-color: black !important;
-    color: white !important;
+  background-color: black !important;
+  color: white !important;
 }
 
 .custom-shadow {
-    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
 }
 
 .accordion-item:first-of-type .accordion-button {
-    border-top-left-radius: 0 !important;
-    border-top-right-radius: 0 !important;
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
 }
 
 .accordion-item:last-of-type .accordion-button.collapsed {
-    border-bottom-right-radius: 0 !important;
-    border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
 }
 
 .accordion-button:focus {
-    box-shadow: none !important;
-    outline: none !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 .accordion-button:not(.collapsed) {
-    background-color: #fff !important;
-    box-shadow: rgba(0, 0, 0, 0.02) 0px 0px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 3px 0px !important;
+  background-color: #fff !important;
+  box-shadow:
+    rgba(0, 0, 0, 0.02) 0px 0px 3px 0px,
+    rgba(27, 31, 35, 0.15) 0px 0px 3px 0px !important;
 }
 
 .accordion-button h4 {
-    font-size: 2rem;
+  font-size: 2rem;
 }
 
 .color-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
-    justify-content: start;
-    gap: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  justify-content: start;
+  gap: 1rem;
 }
 
 .color-container.logo-colorss {
@@ -124,11 +127,13 @@
 }
 
 .color-container button {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    border: none;
-    box-shadow: rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  box-shadow:
+    rgba(0, 0, 0, 0.02) 0px 1px 3px 0px,
+    rgba(27, 31, 35, 0.15) 0px 0px 0px 1px;
 }
 
 #drop-zone {
@@ -151,39 +156,39 @@
 }
 
 .configurator-logo {
-    position: absolute;
-    top: 10px;
-    left: 15px;
-    z-index: 101;
+  position: absolute;
+  top: 10px;
+  left: 15px;
+  z-index: 101;
 }
 
-#addToCartStatus{
-  background-color: rgba(0,0,0,0.25);
-  opacity:0;
-  visibility:hidden;
-  transition: opacity .3s ease;
+#addToCartStatus {
+  background-color: rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease;
 }
 
-#addToCartStatus.show{
-  opacity:1;
-  visibility:visible;
+#addToCartStatus.show {
+  opacity: 1;
+  visibility: visible;
 }
 
-.addToCartStatus-container{
-  width:100%;
-  max-width:500px;
+.addToCartStatus-container {
+  width: 100%;
+  max-width: 500px;
 
-  transform: translate(-50%, -60%) scale(.8);
-  opacity:0;
+  transform: translate(-50%, -60%) scale(0.8);
+  opacity: 0;
 
   transition:
-    transform .35s cubic-bezier(.17,.67,.3,1.3),
-    opacity .3s ease;
+    transform 0.35s cubic-bezier(0.17, 0.67, 0.3, 1.3),
+    opacity 0.3s ease;
 }
 
-#addToCartStatus.show .addToCartStatus-container{
+#addToCartStatus.show .addToCartStatus-container {
   transform: translate(-50%, -50%) scale(1);
-  opacity:1;
+  opacity: 1;
 }
 
 .fade-out {
@@ -194,7 +199,6 @@
 .hidden {
   display: none;
 }
-
 
 #loader {
   position: fixed;
@@ -255,7 +259,7 @@
   font-weight: 600;
   font-size: 1.5rem;
   font-family: Questrial, sans-serif;
-  color: #222; 
+  color: #222;
 }
 
 .shoe-btn {
@@ -268,12 +272,14 @@
   cursor: pointer;
 }
 
-.white-btn, .black-btn {
+.white-btn,
+.black-btn {
   background: #ffffff;
   color: #000;
 }
 
-.white-btn:hover, .black-btn:hover {
+.white-btn:hover,
+.black-btn:hover {
   background: #f5f5f5;
   transform: translateY(-2px);
 }
@@ -291,8 +297,13 @@
   vertical-align: middle;
 }
 
-.dot.white { background: #fff; border: 1px solid #ccc; }
-.dot.black { background: #000; }
+.dot.white {
+  background: #fff;
+  border: 1px solid #ccc;
+}
+.dot.black {
+  background: #000;
+}
 
 #fontSizeSlider {
   width: 100%;
@@ -345,7 +356,6 @@
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
-
 
 .help-modal {
   display: none;
@@ -511,4 +521,199 @@
 
 .summary-value {
   color: #555;
+}
+
+input[type="range"].custom-range {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+
+  width: 100% !important;
+  height: 18px !important;
+  min-height: 18px !important;
+  max-height: 18px !important;
+
+  padding: 0 !important;
+  margin: 8px 0 !important;
+
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+}
+
+/* Chrome, Edge, Safari */
+input[type="range"].custom-range::-webkit-slider-runnable-track {
+  width: 100% !important;
+  height: 5px !important;
+  background: #0d6efd !important;
+  border-radius: 999px !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+input[type="range"].custom-range::-webkit-slider-thumb {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+
+  width: 16px !important;
+  height: 16px !important;
+  background: #0d6efd !important;
+  border-radius: 50% !important;
+  border: none !important;
+  box-shadow: none !important;
+
+  margin-top: -5.5px !important;
+  cursor: pointer !important;
+}
+
+/* Firefox */
+input[type="range"].custom-range::-moz-range-track {
+  width: 100% !important;
+  height: 5px !important;
+  background: #0d6efd !important;
+  border-radius: 999px !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+input[type="range"].custom-range::-moz-range-thumb {
+  width: 16px !important;
+  height: 16px !important;
+  background: #0d6efd !important;
+  border-radius: 50% !important;
+  border: none !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+}
+
+div:has(> #loader) {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100dvh;
+  width: 100dvw;
+  display: flex;
+  z-index: 100000;
+}
+
+.navbar-brand.nav-logo {
+  font-size: 25px !important;
+  font-weight: 700 !important;
+  color: #000 !important;
+}
+
+.accordion-body {
+  padding: 15px 15px !important;
+}
+
+.accordion-button.py-4.px-4 {
+  padding: 15px 15px !important;
+}
+
+.accordion-button h4 {
+  font-size: 21px !important;
+  font-weight: 700 !important;
+  font-family: "Archivo", sans-serif !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+label.fw-bold,
+.aglet-style-btn.option-btn,
+.model-btn,
+.option-btn,
+.font-btn {
+  font-family: Questrial, sans-serif !important;
+  font-size: 15.75px !important;
+}
+
+#viewSideIndicator {
+  font-size: 11.75px !important;
+}
+
+.estimated-total {
+  font-family: "Archivo", sans-serif !important;
+}
+
+.estimated-total span {
+  font-size: 21px !important;
+  font-weight: 700 !important;
+  font-family: "Archivo", sans-serif !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#cartStatusTitle,
+#cartStatusMessage {
+  font-size: 21px !important;
+  font-weight: 700 !important;
+  font-family: "Archivo", sans-serif !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+
+div.price p {
+  font-size: 17px !important;
+}
+
+#summaryBtn,
+#addToCart,
+#summaryBackButton {
+  background-color: black !important;
+  color: white !important;
+  letter-spacing: 0.06rem;
+  font-size: 1rem !important;
+}
+
+.preview-title {
+  font-weight: 600;
+  font-size: 1rem;
+  font-family: Questrial, sans-serif;
+  color: #222;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+
+.white-btn,
+.black-btn {
+  font-size: 17px;
+}
+
+.send-message.mb-4,
+.summary-content h3 {
+  font-size: 26px !important;
+  font-weight: 700 !important;
+  font-family: "Archivo", sans-serif !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  margin-bottom: 1rem !important;
+}
+
+#ContactForm p,
+.form-button {
+  letter-spacing: 0.06rem;
+  font-size: 1rem !important;
+}
+
+.form-control {
+  font-size: 0.8rem !important;
+  margin-bottom: 0;
+}
+
+textarea.form-control {
+  min-height: calc(1.5em + 2.75rem + calc(var(--bs-border-width) * 2));
+  border: 1px solid #cccccc;
+}
+
+.summary-content {
+  font-size: 16px !important;
+}
+
+.help-modal-right {
+  background: white;
 }

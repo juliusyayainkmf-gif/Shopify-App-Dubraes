@@ -1,6 +1,32 @@
-import { useEffect, useState } from "react";
+import { Form, useActionData, useEffect, useNavigation } from "react-router";
+import { useState } from "react";
+import { authenticate } from "../shopify.server";
+import { ensureCustomDubraesProduct } from "../services/dubraes-product.server";
+
+export const action = async ({ request }) => {
+  const { admin } = await authenticate.admin(request);
+
+  try {
+    const result = await ensureCustomDubraesProduct(admin);
+
+    return {
+      success: true,
+      message: result.created
+        ? "Custom Dubraes product created."
+        : "Custom Dubraes product already exists.",
+      setup: result,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message || "Unable to setup Custom Dubraes product.",
+    };
+  }
+};
 
 export default function Index() {
+  const actionData = useActionData();
+  const navigation = useNavigation();
   const [stats, setStats] = useState({
     configs: 0,
     logos: 0,
@@ -96,6 +122,9 @@ export default function Index() {
 
   const configPercent = getPercentage(currentConfigs, previousConfigs);
   const logoPercent = getPercentage(currentLogos, previousLogos);
+  const isSettingUpProduct =
+    navigation.state !== "idle" &&
+    navigation.formData?.get("intent") === "setup-custom-dubraes-product";
 
   function StatCard({ title, value, percent }) {
     const isUp = percent > 0;
@@ -205,6 +234,72 @@ export default function Index() {
               Check Customer Orders
             </s-button>
           </div>
+
+          <s-card>
+            <div style={{ display: "grid", gap: "12px" }}>
+              <div>
+                <h3>Custom Dubraes Product</h3>
+                <p style={{ fontSize: "12px", margin: 0 }}>
+                  Create or verify the product, description, and two variants
+                  required by the configurator.
+                </p>
+              </div>
+
+              <Form method="post">
+                <input
+                  type="hidden"
+                  name="intent"
+                  value="setup-custom-dubraes-product"
+                />
+                <s-button
+                  variant="primary"
+                  type="submit"
+                  disabled={isSettingUpProduct}
+                >
+                  {isSettingUpProduct ? "Setting up..." : "Setup Product"}
+                </s-button>
+              </Form>
+
+              {actionData?.message ? (
+                <div
+                  style={{
+                    border: `1px solid ${actionData.success ? "#b7e4c7" : "#f4b4b4"}`,
+                    padding: "12px",
+                    borderRadius: "8px",
+                    background: actionData.success ? "#f1fff5" : "#fff5f5",
+                  }}
+                >
+                  <p style={{ margin: 0 }}>{actionData.message}</p>
+
+                  {actionData.success ? (
+                    <div style={{ marginTop: "8px", fontSize: "12px" }}>
+                      <p style={{ margin: "4px 0" }}>
+                        <strong>Product:</strong>{" "}
+                        {actionData.setup.product.title}
+                      </p>
+                      <p style={{ margin: "4px 0" }}>
+                        <strong>Dubraes Only ID:</strong>{" "}
+                        {actionData.setup.variants.withoutCustomization.numericId}
+                      </p>
+                      <p style={{ margin: "4px 0" }}>
+                        <strong>With Custom Design ID:</strong>{" "}
+                        {actionData.setup.variants.withCustomization.numericId}
+                      </p>
+                      <pre
+                        style={{
+                          margin: "8px 0 0",
+                          padding: "8px",
+                          background: "#f6f6f7",
+                          overflowX: "auto",
+                        }}
+                      >{`let VARIANT_ID_WITH_CUSTOMIZATION = ${actionData.setup.variants.withCustomization.numericId};
+let VARIANT_ID_WITHOUT_CUSTOMIZATION = ${actionData.setup.variants.withoutCustomization.numericId};`}</pre>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          </s-card>
         </div>
       </s-section>
 
