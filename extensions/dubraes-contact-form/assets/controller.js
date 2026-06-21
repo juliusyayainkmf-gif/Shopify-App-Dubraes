@@ -2,6 +2,7 @@ let currentIndex = 0;
 let VARIANT_ID_WITH_CUSTOMIZATION = 55617681424457;
 let VARIANT_ID_WITHOUT_CUSTOMIZATION = 55617681391689;
 let VARIANT_ID = 0;
+let dubraeVariantIdsPromise = null;
 const visibleSide = 2;
 
 // =========================
@@ -229,6 +230,33 @@ function hideCartStatus() {
   overlay.classList.remove("show");
 }
 
+async function getDubraeVariantIds() {
+  if (!dubraeVariantIdsPromise) {
+    const shop = window.Shopify?.shop;
+
+    dubraeVariantIdsPromise = shop
+      ? fetch(`https://shopify-app-dubraes.onrender.com/api/dubraes-variants?shop=${encodeURIComponent(shop)}`)
+          .then((response) => response.ok ? response.json() : null)
+          .then((data) => data?.success ? data.variants : null)
+          .catch((error) => {
+            console.warn("Could not load Dubraes variant IDs from app:", error);
+            return null;
+          })
+      : Promise.resolve(null);
+  }
+
+  return dubraeVariantIdsPromise;
+}
+
+async function getCartErrorMessage(response) {
+  try {
+    const data = await response.json();
+    return data.description || data.message || data.status || response.statusText;
+  } catch (error) {
+    return response.statusText;
+  }
+}
+
 async function handleUploadCustomLogo(configId) {
   try {
     const base64 = DubraeApp.customLogoImage;
@@ -295,9 +323,10 @@ async function addToCart() {
       DubraeApp.selectedOptions.text ||
       !!DubraeApp.customLogoImage;
 
+    const appVariantIds = await getDubraeVariantIds();
     const VARIANT_ID = hasCustomization
-      ? VARIANT_ID_WITH_CUSTOMIZATION
-      : VARIANT_ID_WITHOUT_CUSTOMIZATION;
+      ? appVariantIds?.withCustomization || VARIANT_ID_WITH_CUSTOMIZATION
+      : appVariantIds?.withoutCustomization || VARIANT_ID_WITHOUT_CUSTOMIZATION;
 
     const hasCustomLogo = !!DubraeApp.customLogoImage;
     const totalSteps = hasCustomLogo ? 3 : 2;
@@ -328,7 +357,7 @@ async function addToCart() {
     });
 
     if (!res.ok) {
-      throw new Error("Failed to add to cart");
+      throw new Error(await getCartErrorMessage(res));
     }
 
     await res.json();
