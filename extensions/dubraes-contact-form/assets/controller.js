@@ -3,11 +3,30 @@ let VARIANT_ID_WITH_CUSTOMIZATION = 55617681424457;
 let VARIANT_ID_WITHOUT_CUSTOMIZATION = 55617681391689;
 let VARIANT_ID = 0;
 let dubraeVariantIdsPromise = null;
+const dubraeConfiguratorData = JSON.parse(document.getElementById("configurator-data").textContent);
 const visibleSide = 2;
 
 // =========================
 // Update model color
 // =========================
+
+function updateRangeProgress(slider) {
+  if (!slider) return;
+
+  const min = parseFloat(slider.min || 0);
+  const max = parseFloat(slider.max || 100);
+  const value = parseFloat(slider.value || min);
+  const progress = ((value - min) / (max - min)) * 100;
+
+  slider.style.setProperty("--range-progress", `${progress}%`);
+}
+
+function setupRangeProgress() {
+  document.querySelectorAll('input[type="range"].custom-range').forEach((slider) => {
+    updateRangeProgress(slider);
+    slider.addEventListener("input", () => updateRangeProgress(slider));
+  });
+}
 
 function updateModelColor() {
   const activeBtn = buttons[currentIndex];
@@ -114,6 +133,8 @@ mainColor.addEventListener("click", function () {
 // });
 
 document.addEventListener("DOMContentLoaded", function () {
+  setupRangeProgress();
+
   const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
   tooltipTriggerList.forEach((el) => new bootstrap.Tooltip(el));
 
@@ -255,6 +276,39 @@ async function getDubraeVariantIds() {
   return dubraeVariantIdsPromise;
 }
 
+function getCurrentProductVariantIds() {
+  const variants = dubraeConfiguratorData.variants || [];
+  const customVariant = variants.find((variant) => {
+    const title = `${variant.title || ""} ${variant.option1 || ""}`.toLowerCase();
+    return title.includes("custom");
+  });
+  const plainVariant = variants.find((variant) => {
+    const title = `${variant.title || ""} ${variant.option1 || ""}`.toLowerCase();
+    return !title.includes("custom");
+  });
+
+  if (!customVariant || !plainVariant) return null;
+
+  return {
+    withCustomization: customVariant.id,
+    withoutCustomization: plainVariant.id,
+  };
+}
+
+async function getVariantIdForCart(hasCustomization) {
+  const currentProductVariantIds = getCurrentProductVariantIds();
+  const appVariantIds = currentProductVariantIds || await getDubraeVariantIds();
+  const variantId = hasCustomization
+    ? appVariantIds?.withCustomization
+    : appVariantIds?.withoutCustomization;
+
+  if (!variantId) {
+    throw new Error("Cannot find Dubraes variant ID. Please run Setup Product again.");
+  }
+
+  return variantId;
+}
+
 async function getCartErrorMessage(response) {
   try {
     const data = await response.json();
@@ -330,10 +384,7 @@ async function addToCart() {
       DubraeApp.selectedOptions.text ||
       !!DubraeApp.customLogoImage;
 
-    const appVariantIds = await getDubraeVariantIds();
-    const VARIANT_ID = hasCustomization
-      ? appVariantIds?.withCustomization || VARIANT_ID_WITH_CUSTOMIZATION
-      : appVariantIds?.withoutCustomization || VARIANT_ID_WITHOUT_CUSTOMIZATION;
+    const VARIANT_ID = await getVariantIdForCart(hasCustomization);
 
     const hasCustomLogo = !!DubraeApp.customLogoImage;
     const totalSteps = hasCustomLogo ? 3 : 2;

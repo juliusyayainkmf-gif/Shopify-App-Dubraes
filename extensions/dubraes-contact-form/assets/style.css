@@ -5,7 +5,7 @@
   overflow: hidden;
   top: 0;
   left: 0;
-  z-index: 9999999999999;
+  z-index: 1;
   background: white;
 }
 
@@ -526,6 +526,7 @@
 input[type="range"].custom-range {
   -webkit-appearance: none !important;
   appearance: none !important;
+  --range-progress: 0%;
 
   width: 100% !important;
   height: 20px !important;
@@ -546,7 +547,13 @@ input[type="range"].custom-range {
 input[type="range"].custom-range::-webkit-slider-runnable-track {
   width: 100% !important;
   height: 6px !important;
-  background: #f4f4f4 !important;
+  background: linear-gradient(
+    to right,
+    #0d6efd 0%,
+    #0d6efd var(--range-progress),
+    #f4f4f4 var(--range-progress),
+    #f4f4f4 100%
+  ) !important;
   border-radius: 999px !important;
   border: 1px solid #b8b8b8 !important;
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.08) !important;

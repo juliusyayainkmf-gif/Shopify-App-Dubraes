@@ -517,7 +517,18 @@
       {% for font in fonts %}
         "{{ font.name | downcase }}": "{{ font.font_file }}"{% unless forloop.last %},{% endunless %}
       {% endfor %}
-    }
+    },
+
+    "variants": [
+      {% for variant in product.variants %}
+        {
+          "id": {{ variant.id | json }},
+          "title": {{ variant.title | json }},
+          "option1": {{ variant.option1 | json }},
+          "available": {{ variant.available | json }}
+        }{% unless forloop.last %},{% endunless %}
+      {% endfor %}
+    ]
   }
 </script>
 
