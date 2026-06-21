@@ -236,8 +236,15 @@ async function getDubraeVariantIds() {
 
     dubraeVariantIdsPromise = shop
       ? fetch(`https://shopify-app-dubraes.onrender.com/api/dubraes-variants?shop=${encodeURIComponent(shop)}`)
-          .then((response) => response.ok ? response.json() : null)
-          .then((data) => data?.success ? data.variants : null)
+          .then((response) => response.json())
+          .then((data) => {
+            if (!data?.success) {
+              console.warn("Dubraes variant endpoint error:", data?.message);
+              return null;
+            }
+
+            return data.variants;
+          })
           .catch((error) => {
             console.warn("Could not load Dubraes variant IDs from app:", error);
             return null;

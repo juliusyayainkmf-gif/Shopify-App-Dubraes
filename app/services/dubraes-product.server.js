@@ -30,6 +30,95 @@ const getProductVariants = (product) =>
     option: variant.selectedOptions?.[0]?.value || variant.title,
   })) || [];
 
+const publishProductToSalesChannels = async (admin, productId) => {
+  const data = await graphql(
+    admin,
+    `#graphql
+      query GetPublications {
+        publications(first: 20) {
+          nodes {
+            id
+            name
+          }
+        }
+      }
+    `,
+  );
+
+  const publicationInputs = data.publications.nodes.map((publication) => ({
+    publicationId: publication.id,
+  }));
+
+  if (!publicationInputs.length) return;
+
+  const publishData = await graphql(
+    admin,
+    `#graphql
+      mutation PublishCustomDubraesProduct(
+        $id: ID!
+        $input: [PublicationInput!]!
+      ) {
+        publishablePublish(id: $id, input: $input) {
+          userErrors {
+            field
+            message
+          }
+        }
+      }
+    `,
+    {
+      id: productId,
+      input: publicationInputs,
+    },
+  );
+
+  const errors = publishData.publishablePublish.userErrors.filter(
+    (error) => !error.message.toLowerCase().includes("already published"),
+  );
+
+  if (errors.length) {
+    throw new Error(errors.map((error) => error.message).join(", "));
+  }
+};
+
+const allowVariantsToSellWithoutInventory = async (
+  admin,
+  productId,
+  variants,
+) => {
+  const data = await graphql(
+    admin,
+    `#graphql
+      mutation AllowDubraesVariantsToSellWithoutInventory(
+        $productId: ID!
+        $variants: [ProductVariantsBulkInput!]!
+      ) {
+        productVariantsBulkUpdate(
+          productId: $productId
+          variants: $variants
+        ) {
+          userErrors {
+            field
+            message
+          }
+        }
+      }
+    `,
+    {
+      productId,
+      variants: variants.map((variant) => ({
+        id: variant.id,
+        inventoryPolicy: "CONTINUE",
+      })),
+    },
+  );
+
+  const errors = data.productVariantsBulkUpdate.userErrors;
+  if (errors.length) {
+    throw new Error(errors.map((error) => error.message).join(", "));
+  }
+};
+
 const findCustomDubraesProduct = async (admin) => {
   const data = await graphql(
     admin,
@@ -107,6 +196,7 @@ const createCustomDubraesProduct = async (admin) => {
         variants: [
           {
             price: "5.00",
+            inventoryPolicy: "CONTINUE",
             optionValues: [
               {
                 optionName: "Type",
@@ -116,6 +206,7 @@ const createCustomDubraesProduct = async (admin) => {
           },
           {
             price: "5.00",
+            inventoryPolicy: "CONTINUE",
             optionValues: [
               {
                 optionName: "Type",
@@ -153,6 +244,9 @@ export const ensureCustomDubraesProduct = async (admin) => {
       `The "${PRODUCT_TITLE}" product exists, but it does not have both required variants.`,
     );
   }
+
+  await allowVariantsToSellWithoutInventory(admin, product.id, variants);
+  await publishProductToSalesChannels(admin, product.id);
 
   return {
     created: !existingProduct,
