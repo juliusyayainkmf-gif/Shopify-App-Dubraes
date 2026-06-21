@@ -2,6 +2,8 @@ const allowedOrigins = [
   "https://dubraes-inventory-dashboard.myshopify.com",
   "https://www.dubraes.com",
   "https://dubraes.com",
+  "https://www.keepmefreshusa.com",
+  "https://keepmefreshusa.com",
 ];
 
 export function getCorsHeaders(request) {

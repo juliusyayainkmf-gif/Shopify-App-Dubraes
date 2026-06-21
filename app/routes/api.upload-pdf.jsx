@@ -4,26 +4,7 @@ import {
   checkRateLimit,
   getRateLimitHeaders,
 } from "../utils/rate-limit.server";
-
-const allowedOrigins = [
-  "https://dubraes-inventory-dashboard.myshopify.com",
-  "https://www.dubraes.com",
-];
-
-const getCorsHeaders = (request) => {
-  const origin = request.headers.get("origin");
-
-  return {
-    "Access-Control-Allow-Origin": allowedOrigins.includes(origin)
-      ? origin
-      : "null",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-  };
-};
-
-const isAllowedOrigin = (request) =>
-  allowedOrigins.includes(request.headers.get("origin"));
+import { getCorsHeaders, isAllowedOrigin } from "../utils/cors.server";
 
 const uploadRateLimit = {
   maxRequests: 100,
