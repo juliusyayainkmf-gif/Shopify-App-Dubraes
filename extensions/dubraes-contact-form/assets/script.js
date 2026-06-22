@@ -598,6 +598,101 @@ window.DubraeApp = {
   // PDF Generating
   // =========================
 
+  savePdfSnapshotState() {
+    return {
+      rendererShadowMapEnabled: this.renderer.shadowMap.enabled,
+      dirLightCastShadow: this.dirLight?.castShadow,
+      floorVisible: this.floor?.visible,
+      floorReceiveShadow: this.floor?.receiveShadow,
+      dubraes: this.dubraes.map((dubrae) => ({
+        mesh: dubrae,
+        visible: dubrae.visible,
+        castShadow: dubrae.castShadow,
+        receiveShadow: dubrae.receiveShadow,
+        position: dubrae.position.clone(),
+        quaternion: dubrae.quaternion.clone(),
+      })),
+      airforceShoe: this.airforceShoe.map((shoePart) => ({
+        mesh: shoePart,
+        visible: shoePart.visible,
+        castShadow: shoePart.castShadow,
+        receiveShadow: shoePart.receiveShadow,
+        position: shoePart.position.clone(),
+        materialOpacity: shoePart.material?.opacity,
+        materialTransparent: shoePart.material?.transparent,
+      })),
+    };
+  },
+
+  restorePdfSnapshotState(state) {
+    this.renderer.shadowMap.enabled = state.rendererShadowMapEnabled;
+
+    if (this.dirLight && typeof state.dirLightCastShadow === "boolean") {
+      this.dirLight.castShadow = state.dirLightCastShadow;
+    }
+
+    if (this.floor) {
+      this.floor.visible = state.floorVisible;
+      this.floor.receiveShadow = state.floorReceiveShadow;
+    }
+
+    state.dubraes.forEach((item) => {
+      item.mesh.visible = item.visible;
+      item.mesh.castShadow = item.castShadow;
+      item.mesh.receiveShadow = item.receiveShadow;
+      item.mesh.position.copy(item.position);
+      item.mesh.quaternion.copy(item.quaternion);
+    });
+
+    state.airforceShoe.forEach((item) => {
+      item.mesh.visible = item.visible;
+      item.mesh.castShadow = item.castShadow;
+      item.mesh.receiveShadow = item.receiveShadow;
+      item.mesh.position.copy(item.position);
+
+      if (item.mesh.material) {
+        item.mesh.material.opacity = item.materialOpacity;
+        item.mesh.material.transparent = item.materialTransparent;
+      }
+    });
+
+    this.scene.updateMatrixWorld(true);
+  },
+
+  prepareDubraesForPdfSnapshot() {
+    this.renderer.shadowMap.enabled = true;
+
+    if (this.dirLight) {
+      this.dirLight.castShadow = true;
+    }
+
+    if (this.floor) {
+      this.floor.visible = true;
+      this.floor.receiveShadow = true;
+    }
+
+    this.airforceShoe.forEach((shoePart) => {
+      shoePart.visible = false;
+    });
+
+    this.dubraes.forEach((dubrae) => {
+      if (!dubrae.userData.originalPosition || !dubrae.userData.originalQuaternion) return;
+
+      dubrae.castShadow = true;
+      dubrae.receiveShadow = true;
+      dubrae.position.copy(dubrae.userData.originalPosition);
+      dubrae.quaternion.copy(dubrae.userData.originalQuaternion);
+
+      if (this.activeModel === "small") {
+        dubrae.visible = dubrae.name.includes("Plane_Plane003") || dubrae.name.includes("Plane_Plane004");
+      } else {
+        dubrae.visible = dubrae.name.includes("Plane_Plane001") || dubrae.name.includes("Plane_Plane002");
+      }
+    });
+
+    this.scene.updateMatrixWorld(true);
+  },
+
   captureImage() {
     const width = 1000;
     const height = 1000;
@@ -606,6 +701,9 @@ window.DubraeApp = {
     this.renderer.getSize(originalSize);
 
     const originalPixelRatio = this.renderer.getPixelRatio();
+    const snapshotState = this.savePdfSnapshotState();
+
+    this.prepareDubraesForPdfSnapshot();
 
     this.renderer.setPixelRatio(1);
     this.renderer.setSize(width, height, false);
@@ -640,7 +738,13 @@ window.DubraeApp = {
     const img = new Image();
     img.src = image;
 
-    return new Promise((resolve) => {
+    const restoreRendererAndScene = () => {
+      this.renderer.setPixelRatio(originalPixelRatio);
+      this.renderer.setSize(originalSize.x, originalSize.y, false);
+      this.restorePdfSnapshotState(snapshotState);
+    };
+
+    return new Promise((resolve, reject) => {
       img.onload = () => {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
@@ -667,14 +771,16 @@ window.DubraeApp = {
 
         ctx.restore();
 
+        restoreRendererAndScene();
+
         resolve(canvas.toDataURL("image/png"));
       };
+
+      img.onerror = () => {
+        restoreRendererAndScene();
+        reject(new Error("Unable to prepare PDF image"));
+      };
     });
-
-    this.renderer.setPixelRatio(originalPixelRatio);
-    this.renderer.setSize(originalSize.x, originalSize.y, false);
-
-    return image;
   },
 
   async generatePDF() {
