@@ -30,6 +30,11 @@ function setupRangeProgress() {
 
 function setupConfiguratorAccordions() {
   const transitionMs = 350;
+  const configurator = document.querySelector(".model-viewer-section");
+
+  if (!configurator || configurator.dataset.dubraesAccordionReady === "true") return;
+
+  configurator.dataset.dubraesAccordionReady = "true";
 
   const openPanel = (button, target) => {
     if (target.dataset.dubraesTransitioning === "true") return;
@@ -77,25 +82,23 @@ function setupConfiguratorAccordions() {
     }, transitionMs);
   };
 
-  document.querySelectorAll(".model-viewer-section .accordion-button[data-bs-target]").forEach((button) => {
-    if (button.dataset.dubraesAccordionReady === "true") return;
+  document.addEventListener("click", (event) => {
+    const button = event.target?.closest?.(".model-viewer-section .accordion-button[data-dubraes-target]");
+    if (!button) return;
 
-    button.dataset.dubraesAccordionReady = "true";
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
 
-    button.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopImmediatePropagation();
+    const target = document.querySelector(button.dataset.dubraesTarget);
+    if (!target) return;
 
-      const target = document.querySelector(button.dataset.bsTarget);
-      if (!target) return;
-
-      if (target.classList.contains("show")) {
-        closePanel(button, target);
-      } else {
-        openPanel(button, target);
-      }
-    }, true);
-  });
+    if (target.classList.contains("show") || target.classList.contains("collapsing")) {
+      closePanel(button, target);
+    } else {
+      openPanel(button, target);
+    }
+  }, true);
 }
 
 function updateModelColor() {
