@@ -28,6 +28,76 @@ function setupRangeProgress() {
   });
 }
 
+function setupConfiguratorAccordions() {
+  const transitionMs = 350;
+
+  const openPanel = (button, target) => {
+    if (target.dataset.dubraesTransitioning === "true") return;
+
+    target.dataset.dubraesTransitioning = "true";
+    target.classList.remove("collapse");
+    target.classList.add("collapsing");
+    target.style.height = "0px";
+
+    button.classList.remove("collapsed");
+    button.setAttribute("aria-expanded", "true");
+
+    requestAnimationFrame(() => {
+      target.style.height = `${target.scrollHeight}px`;
+    });
+
+    setTimeout(() => {
+      target.classList.remove("collapsing");
+      target.classList.add("collapse", "show");
+      target.style.height = "";
+      target.dataset.dubraesTransitioning = "false";
+    }, transitionMs);
+  };
+
+  const closePanel = (button, target) => {
+    if (target.dataset.dubraesTransitioning === "true") return;
+
+    target.dataset.dubraesTransitioning = "true";
+    target.style.height = `${target.scrollHeight}px`;
+    target.classList.remove("collapse", "show");
+    target.classList.add("collapsing");
+
+    button.classList.add("collapsed");
+    button.setAttribute("aria-expanded", "false");
+
+    requestAnimationFrame(() => {
+      target.style.height = "0px";
+    });
+
+    setTimeout(() => {
+      target.classList.remove("collapsing");
+      target.classList.add("collapse");
+      target.style.height = "";
+      target.dataset.dubraesTransitioning = "false";
+    }, transitionMs);
+  };
+
+  document.querySelectorAll(".model-viewer-section .accordion-button[data-bs-target]").forEach((button) => {
+    if (button.dataset.dubraesAccordionReady === "true") return;
+
+    button.dataset.dubraesAccordionReady = "true";
+
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      const target = document.querySelector(button.dataset.bsTarget);
+      if (!target) return;
+
+      if (target.classList.contains("show")) {
+        closePanel(button, target);
+      } else {
+        openPanel(button, target);
+      }
+    }, true);
+  });
+}
+
 function updateModelColor() {
   const activeBtn = buttons[currentIndex];
   const color = activeBtn.dataset.color;
@@ -134,6 +204,7 @@ mainColor.addEventListener("click", function () {
 
 document.addEventListener("DOMContentLoaded", function () {
   setupRangeProgress();
+  setupConfiguratorAccordions();
 
   const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
   tooltipTriggerList.forEach((el) => new bootstrap.Tooltip(el));
