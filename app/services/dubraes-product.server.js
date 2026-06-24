@@ -10,6 +10,11 @@ const VARIANT_WITHOUT_CUSTOMIZATION = "Dubraes Only";
 const VARIANT_WITH_CUSTOMIZATION = "Dubraes with Custom Design";
 
 const toNumericId = (gid) => gid?.split("/").pop() || "";
+const normalize = (value = "") =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 
 const graphql = async (admin, query, variables = {}) => {
   const response = await admin.graphql(query, { variables });
@@ -29,6 +34,43 @@ const getProductVariants = (product) =>
     title: variant.title,
     option: variant.selectedOptions?.[0]?.value || variant.title,
   })) || [];
+
+const getVariantSearchText = (variant) =>
+  normalize(`${variant.title || ""} ${variant.option || ""}`);
+
+const findRequiredVariants = (variants) => {
+  const withCustomization =
+    variants.find((variant) => {
+      const text = getVariantSearchText(variant);
+      return (
+        text.includes("custom design") ||
+        text.includes("with custom") ||
+        text.includes("customization") ||
+        (text.includes("custom") && !text.includes("only"))
+      );
+    }) ||
+    variants[1] ||
+    variants[0];
+
+  const withoutCustomization =
+    variants.find((variant) => {
+      const text = getVariantSearchText(variant);
+      return (
+        text.includes("dubraes only") ||
+        text.includes("without custom") ||
+        text.includes("no custom") ||
+        text.includes("only") ||
+        !text.includes("custom")
+      );
+    }) ||
+    variants.find((variant) => variant.id !== withCustomization?.id) ||
+    variants[0];
+
+  return {
+    withoutCustomization,
+    withCustomization,
+  };
+};
 
 const publishProductToSalesChannels = async (admin, productId) => {
   const data = await graphql(
@@ -119,12 +161,12 @@ const allowVariantsToSellWithoutInventory = async (
   }
 };
 
-const findCustomDubraesProduct = async (admin) => {
+const findCustomDubraesProductByQuery = async (admin, query) => {
   const data = await graphql(
     admin,
     `#graphql
       query FindCustomDubraesProduct($query: String!) {
-        products(first: 1, query: $query) {
+        products(first: 10, query: $query) {
           nodes {
             id
             title
@@ -143,10 +185,40 @@ const findCustomDubraesProduct = async (admin) => {
         }
       }
     `,
-    { query: `title:'${PRODUCT_TITLE}'` },
+    { query },
   );
 
-  return data.products.nodes[0] || null;
+  return data.products.nodes || [];
+};
+
+const findCustomDubraesProduct = async (admin) => {
+  const exactMatches = await findCustomDubraesProductByQuery(
+    admin,
+    `title:'${PRODUCT_TITLE}'`,
+  );
+
+  const exactProduct = exactMatches.find(
+    (product) => normalize(product.title) === normalize(PRODUCT_TITLE),
+  );
+  if (exactProduct) return exactProduct;
+
+  const handleMatches = await findCustomDubraesProductByQuery(
+    admin,
+    "handle:custom-dubraes",
+  );
+  if (handleMatches[0]) return handleMatches[0];
+
+  const titleMatches = await findCustomDubraesProductByQuery(
+    admin,
+    "title:Dubraes",
+  );
+
+  return (
+    titleMatches.find((product) => {
+      const title = normalize(product.title);
+      return title.includes("custom") && title.includes("dubraes");
+    }) || null
+  );
 };
 
 const createCustomDubraesProduct = async (admin) => {
@@ -231,17 +303,12 @@ export const ensureCustomDubraesProduct = async (admin) => {
   const existingProduct = await findCustomDubraesProduct(admin);
   const product = existingProduct || (await createCustomDubraesProduct(admin));
   const variants = getProductVariants(product);
-
-  const withoutCustomization = variants.find(
-    (variant) => variant.option === VARIANT_WITHOUT_CUSTOMIZATION,
-  );
-  const withCustomization = variants.find(
-    (variant) => variant.option === VARIANT_WITH_CUSTOMIZATION,
-  );
+  const { withoutCustomization, withCustomization } =
+    findRequiredVariants(variants);
 
   if (!withoutCustomization || !withCustomization) {
     throw new Error(
-      `The "${PRODUCT_TITLE}" product exists, but it does not have both required variants.`,
+      `The "${PRODUCT_TITLE}" product exists, but it does not have usable variants.`,
     );
   }
 

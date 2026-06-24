@@ -369,15 +369,28 @@ function getCurrentProductVariantIds() {
   };
 }
 
+function getConfiguredVariantIds() {
+  if (!VARIANT_ID_WITH_CUSTOMIZATION && !VARIANT_ID_WITHOUT_CUSTOMIZATION) {
+    return null;
+  }
+
+  return {
+    withCustomization: VARIANT_ID_WITH_CUSTOMIZATION,
+    withoutCustomization: VARIANT_ID_WITHOUT_CUSTOMIZATION,
+  };
+}
+
 async function getVariantIdForCart(hasCustomization) {
   const currentProductVariantIds = getCurrentProductVariantIds();
   const appVariantIds = currentProductVariantIds || await getDubraeVariantIds();
+  const configuredVariantIds = getConfiguredVariantIds();
+  const variantIds = appVariantIds || configuredVariantIds;
   const variantId = hasCustomization
-    ? appVariantIds?.withCustomization
-    : appVariantIds?.withoutCustomization;
+    ? variantIds?.withCustomization
+    : variantIds?.withoutCustomization;
 
   if (!variantId) {
-    throw new Error("Cannot find Dubraes variant ID. Please run Setup Product again.");
+    throw new Error("Cannot find a usable Dubraes variant ID.");
   }
 
   return variantId;
