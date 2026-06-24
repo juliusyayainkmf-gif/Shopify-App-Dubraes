@@ -496,6 +496,17 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
 <script src="{{ 'bootstrap.bundle.min.js' | asset_url }}" defer="defer"></script>
 
+{% assign dubraes_only_variant_id = blank %}
+{% assign dubraes_custom_variant_id = blank %}
+{% for variant in product.variants %}
+  {% assign variant_label = variant.title | append: ' ' | append: variant.option1 | downcase %}
+  {% if variant_label contains 'custom' %}
+    {% assign dubraes_custom_variant_id = variant.id %}
+  {% else %}
+    {% assign dubraes_only_variant_id = variant.id %}
+  {% endif %}
+{% endfor %}
+
 <script id="configurator-data" type="application/json">
   {
     "models": {
@@ -509,6 +520,13 @@
       {% for font in fonts %}
         "{{ font.name | downcase }}": "{{ font.font_file }}"{% unless forloop.last %},{% endunless %}
       {% endfor %}
+    },
+
+    "shop": {{ shop.permanent_domain | json }},
+
+    "variantIds": {
+      "withCustomization": {{ dubraes_custom_variant_id | json }},
+      "withoutCustomization": {{ dubraes_only_variant_id | json }}
     },
 
     "variants": [

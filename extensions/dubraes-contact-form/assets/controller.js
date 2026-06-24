@@ -327,7 +327,7 @@ function hideCartStatus() {
 
 async function getDubraeVariantIds() {
   if (!dubraeVariantIdsPromise) {
-    const shop = window.Shopify?.shop;
+    const shop = dubraeConfiguratorData.shop || window.Shopify?.shop;
 
     dubraeVariantIdsPromise = shop
       ? fetch(`https://shopify-app-dubraes.onrender.com/api/dubraes-variants?shop=${encodeURIComponent(shop)}`)
@@ -350,6 +350,33 @@ async function getDubraeVariantIds() {
   return dubraeVariantIdsPromise;
 }
 
+function addVariantCandidate(candidates, seenVariantIds, source, variantIds, hasCustomization) {
+  const variantId = hasCustomization
+    ? variantIds?.withCustomization
+    : variantIds?.withoutCustomization;
+
+  if (!variantId || seenVariantIds.has(String(variantId))) return;
+
+  seenVariantIds.add(String(variantId));
+  candidates.push({
+    id: Number(variantId),
+    source,
+  });
+}
+
+function getLiquidVariantIds() {
+  const variantIds = dubraeConfiguratorData.variantIds;
+
+  if (!variantIds?.withCustomization || !variantIds?.withoutCustomization) {
+    return null;
+  }
+
+  return {
+    withCustomization: Number(variantIds.withCustomization),
+    withoutCustomization: Number(variantIds.withoutCustomization),
+  };
+}
+
 function getCurrentProductVariantIds() {
   const variants = dubraeConfiguratorData.variants || [];
   const customVariant = variants.find((variant) => {
@@ -370,6 +397,12 @@ function getCurrentProductVariantIds() {
 }
 
 function getConfiguredVariantIds() {
+  const shop = `${dubraeConfiguratorData.shop || window.Shopify?.shop || ""}`.toLowerCase();
+
+  if (shop && !shop.includes("dubrae")) {
+    return null;
+  }
+
   if (!VARIANT_ID_WITH_CUSTOMIZATION && !VARIANT_ID_WITHOUT_CUSTOMIZATION) {
     return null;
   }
@@ -380,20 +413,48 @@ function getConfiguredVariantIds() {
   };
 }
 
-async function getVariantIdForCart(hasCustomization) {
+async function getVariantCandidatesForCart(hasCustomization) {
+  const candidates = [];
+  const seenVariantIds = new Set();
+  const liquidVariantIds = getLiquidVariantIds();
   const currentProductVariantIds = getCurrentProductVariantIds();
-  const appVariantIds = currentProductVariantIds || await getDubraeVariantIds();
   const configuredVariantIds = getConfiguredVariantIds();
-  const variantIds = appVariantIds || configuredVariantIds;
-  const variantId = hasCustomization
-    ? variantIds?.withCustomization
-    : variantIds?.withoutCustomization;
+  const appVariantIds = await getDubraeVariantIds();
 
-  if (!variantId) {
+  addVariantCandidate(
+    candidates,
+    seenVariantIds,
+    "liquid product",
+    liquidVariantIds,
+    hasCustomization,
+  );
+  addVariantCandidate(
+    candidates,
+    seenVariantIds,
+    "current product",
+    currentProductVariantIds,
+    hasCustomization,
+  );
+  addVariantCandidate(
+    candidates,
+    seenVariantIds,
+    "app product",
+    appVariantIds,
+    hasCustomization,
+  );
+  addVariantCandidate(
+    candidates,
+    seenVariantIds,
+    "configured fallback",
+    configuredVariantIds,
+    hasCustomization,
+  );
+
+  if (!candidates.length) {
     throw new Error("Cannot find a usable Dubraes variant ID.");
   }
 
-  return variantId;
+  return candidates;
 }
 
 async function getCartErrorMessage(response) {
@@ -459,6 +520,36 @@ async function handleUploadPDF(configId) {
   }
 }
 
+async function addDubraesLineItem(hasCustomization, properties) {
+  const candidates = await getVariantCandidatesForCart(hasCustomization);
+  let lastError = "Cannot find variant";
+
+  for (const candidate of candidates) {
+    const response = await fetch('/cart/add.js', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: candidate.id,
+        quantity: 1,
+        properties,
+      })
+    });
+
+    if (response.ok) {
+      return response.json();
+    }
+
+    lastError = await getCartErrorMessage(response);
+    console.warn(
+      `Could not add Dubraes variant from ${candidate.source}:`,
+      candidate.id,
+      lastError,
+    );
+  }
+
+  throw new Error(lastError);
+}
+
 async function addToCart() {
   const btn = document.getElementById("addToCart");
   const el = document.getElementById("backButton");
@@ -471,8 +562,6 @@ async function addToCart() {
       DubraeApp.selectedOptions.text ||
       !!DubraeApp.customLogoImage;
 
-    const VARIANT_ID = await getVariantIdForCart(hasCustomization);
-
     const hasCustomLogo = !!DubraeApp.customLogoImage;
     const totalSteps = hasCustomLogo ? 3 : 2;
 
@@ -481,31 +570,17 @@ async function addToCart() {
 
     showCartStatus(`Step 1/${totalSteps}`, "Adding to cart...");
 
-    const res = await fetch('/cart/add.js', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: VARIANT_ID,
-        quantity: 1,
-        properties: {
-          _configID: uniqueId,
-          "Design ID": uniqueId,
-          "Model": DubraeApp.capitalizeFirst(DubraeApp.activeModel),
-          "Main Color": DubraeApp.capitalizeFirst(DubraeApp.activeColor),
-          "Text": DubraeApp.activeText,
-          "Font Color": DubraeApp.activeText !== "N/a" ? DubraeApp.capitalizeFirst(DubraeApp.activeTextColorTitle) : "N/a",
-          "Font Style": DubraeApp.activeText !== "N/a" ? DubraeApp.capitalizeFirst(DubraeApp.activeFont) : "N/a",
-          "Custom Logo": DubraeApp.capitalizeFirst(DubraeApp.activeCustomLogo),
-          "Logo Color": DubraeApp.customLogoImage ?  DubraeApp.capitalizeFirst(DubraeApp.activeLogoColor) : "N/a",
-        }
-      })
+    await addDubraesLineItem(hasCustomization, {
+      _configID: uniqueId,
+      "Design ID": uniqueId,
+      "Model": DubraeApp.capitalizeFirst(DubraeApp.activeModel),
+      "Main Color": DubraeApp.capitalizeFirst(DubraeApp.activeColor),
+      "Text": DubraeApp.activeText,
+      "Font Color": DubraeApp.activeText !== "N/a" ? DubraeApp.capitalizeFirst(DubraeApp.activeTextColorTitle) : "N/a",
+      "Font Style": DubraeApp.activeText !== "N/a" ? DubraeApp.capitalizeFirst(DubraeApp.activeFont) : "N/a",
+      "Custom Logo": DubraeApp.capitalizeFirst(DubraeApp.activeCustomLogo),
+      "Logo Color": DubraeApp.customLogoImage ?  DubraeApp.capitalizeFirst(DubraeApp.activeLogoColor) : "N/a",
     });
-
-    if (!res.ok) {
-      throw new Error(await getCartErrorMessage(res));
-    }
-
-    await res.json();
 
     showCartStatus(`Step 2/${totalSteps}`, "Uploading PDF...");
     await handleUploadPDF(uniqueId);

@@ -30,6 +30,7 @@ export const loader = async ({ request }) => {
 
     return json({
       success: true,
+      product: setup.product,
       variants: {
         withCustomization: Number(
           setup.variants.withCustomization.numericId,
