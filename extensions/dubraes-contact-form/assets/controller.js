@@ -1,8 +1,5 @@
 let currentIndex = 0;
-let VARIANT_ID_WITH_CUSTOMIZATION = 55617681424457;
-let VARIANT_ID_WITHOUT_CUSTOMIZATION = 55617681391689;
-let VARIANT_ID = 0;
-let dubraeVariantIdsPromise = null;
+let storefrontVariantIdsPromise = null;
 const dubraeConfiguratorData = JSON.parse(document.getElementById("configurator-data").textContent);
 const visibleSide = 2;
 
@@ -325,31 +322,6 @@ function hideCartStatus() {
   overlay.classList.remove("show");
 }
 
-async function getDubraeVariantIds() {
-  if (!dubraeVariantIdsPromise) {
-    const shop = dubraeConfiguratorData.shop || window.Shopify?.shop;
-
-    dubraeVariantIdsPromise = shop
-      ? fetch(`https://shopify-app-dubraes.onrender.com/api/dubraes-variants?shop=${encodeURIComponent(shop)}`)
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data?.success) {
-              console.warn("Dubraes variant endpoint error:", data?.message);
-              return null;
-            }
-
-            return data.variants;
-          })
-          .catch((error) => {
-            console.warn("Could not load Dubraes variant IDs from app:", error);
-            return null;
-          })
-      : Promise.resolve(null);
-  }
-
-  return dubraeVariantIdsPromise;
-}
-
 function addVariantCandidate(candidates, seenVariantIds, source, variantIds, hasCustomization) {
   const variantId = hasCustomization
     ? variantIds?.withCustomization
@@ -377,14 +349,13 @@ function getLiquidVariantIds() {
   };
 }
 
-function getCurrentProductVariantIds() {
-  const variants = dubraeConfiguratorData.variants || [];
+function getVariantIdsFromVariants(variants = []) {
   const customVariant = variants.find((variant) => {
-    const title = `${variant.title || ""} ${variant.option1 || ""}`.toLowerCase();
+    const title = `${variant.title || ""} ${variant.option1 || ""} ${variant.name || ""}`.toLowerCase();
     return title.includes("custom");
   });
   const plainVariant = variants.find((variant) => {
-    const title = `${variant.title || ""} ${variant.option1 || ""}`.toLowerCase();
+    const title = `${variant.title || ""} ${variant.option1 || ""} ${variant.name || ""}`.toLowerCase();
     return !title.includes("custom");
   });
 
@@ -396,21 +367,39 @@ function getCurrentProductVariantIds() {
   };
 }
 
-function getConfiguredVariantIds() {
-  const shop = `${dubraeConfiguratorData.shop || window.Shopify?.shop || ""}`.toLowerCase();
+function getCurrentProductVariantIds() {
+  return getVariantIdsFromVariants(dubraeConfiguratorData.variants || []);
+}
 
-  if (shop && !shop.includes("dubrae")) {
-    return null;
+async function getStorefrontProductVariantIds() {
+  if (!storefrontVariantIdsPromise) {
+    storefrontVariantIdsPromise = (async () => {
+      const handle = dubraeConfiguratorData.productHandle;
+
+      if (!handle) return null;
+
+      try {
+        const response = await fetch(`/products/${handle}.js`, {
+          headers: { Accept: "application/json" },
+        });
+
+        if (!response.ok) return null;
+
+        const product = await response.json();
+        const variantIds = getVariantIdsFromVariants(product.variants || []);
+
+        if (variantIds) {
+          return variantIds;
+        }
+      } catch (error) {
+        console.warn(`Could not load product variant IDs from /products/${handle}.js:`, error);
+      }
+
+      return null;
+    })();
   }
 
-  if (!VARIANT_ID_WITH_CUSTOMIZATION && !VARIANT_ID_WITHOUT_CUSTOMIZATION) {
-    return null;
-  }
-
-  return {
-    withCustomization: VARIANT_ID_WITH_CUSTOMIZATION,
-    withoutCustomization: VARIANT_ID_WITHOUT_CUSTOMIZATION,
-  };
+  return storefrontVariantIdsPromise;
 }
 
 async function getVariantCandidatesForCart(hasCustomization) {
@@ -418,8 +407,7 @@ async function getVariantCandidatesForCart(hasCustomization) {
   const seenVariantIds = new Set();
   const liquidVariantIds = getLiquidVariantIds();
   const currentProductVariantIds = getCurrentProductVariantIds();
-  const configuredVariantIds = getConfiguredVariantIds();
-  const appVariantIds = await getDubraeVariantIds();
+  const storefrontProductVariantIds = await getStorefrontProductVariantIds();
 
   addVariantCandidate(
     candidates,
@@ -438,15 +426,8 @@ async function getVariantCandidatesForCart(hasCustomization) {
   addVariantCandidate(
     candidates,
     seenVariantIds,
-    "app product",
-    appVariantIds,
-    hasCustomization,
-  );
-  addVariantCandidate(
-    candidates,
-    seenVariantIds,
-    "configured fallback",
-    configuredVariantIds,
+    "storefront product",
+    storefrontProductVariantIds,
     hasCustomization,
   );
 
