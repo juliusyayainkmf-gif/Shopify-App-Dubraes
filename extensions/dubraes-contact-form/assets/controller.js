@@ -432,7 +432,9 @@ async function getVariantCandidatesForCart(hasCustomization) {
   );
 
   if (!candidates.length) {
-    throw new Error("Cannot find a usable Dubraes variant ID.");
+    throw new Error(
+      `Cannot find usable Dubraes variants for cart product "${dubraeConfiguratorData.cartProductTitle || "unknown"}" (${dubraeConfiguratorData.productHandle || "no handle"}). Select the Custom Dubraes product in the app block settings.`,
+    );
   }
 
   return candidates;

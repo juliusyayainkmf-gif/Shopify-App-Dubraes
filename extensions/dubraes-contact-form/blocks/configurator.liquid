@@ -496,9 +496,17 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
 <script src="{{ 'bootstrap.bundle.min.js' | asset_url }}" defer="defer"></script>
 
+{% assign configurator_cart_product = product %}
+{% if block.settings.cart_product != blank %}
+  {% assign selected_cart_product = all_products[block.settings.cart_product] %}
+  {% if selected_cart_product != blank %}
+    {% assign configurator_cart_product = selected_cart_product %}
+  {% endif %}
+{% endif %}
+
 {% assign dubraes_only_variant_id = blank %}
 {% assign dubraes_custom_variant_id = blank %}
-{% for variant in product.variants %}
+{% for variant in configurator_cart_product.variants %}
   {% assign variant_label = variant.title | append: ' ' | append: variant.option1 | downcase %}
   {% if variant_label contains 'custom' %}
     {% assign dubraes_custom_variant_id = variant.id %}
@@ -523,7 +531,8 @@
     },
 
     "shop": {{ shop.permanent_domain | json }},
-    "productHandle": {{ product.handle | json }},
+    "productHandle": {{ configurator_cart_product.handle | json }},
+    "cartProductTitle": {{ configurator_cart_product.title | json }},
 
     "variantIds": {
       "withCustomization": {{ dubraes_custom_variant_id | json }},
@@ -531,7 +540,7 @@
     },
 
     "variants": [
-      {% for variant in product.variants %}
+      {% for variant in configurator_cart_product.variants %}
         {
           "id": {{ variant.id | json }},
           "title": {{ variant.title | json }},
@@ -557,6 +566,11 @@
       "id": "title",
       "label": "Title",
       "default": "Dubraes"
+    },
+    {
+      "type": "product",
+      "id": "cart_product",
+      "label": "Cart product"
     }
   ]
 }
